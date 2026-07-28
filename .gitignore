@@ -1,0 +1,58 @@
+# Maven / Java
+/target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+dependency-reduced-pom.xml
+pom.xml.versionsBackup
+release.properties
+
+# IDEs
+/.idea/
+*.iml
+*.iws
+*.ipr
+/.vscode/
+/.settings/
+/.classpath
+/.project
+/.factorypath
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+
+# PowerNukkitX local server runtime
+/logs/
+/worlds/
+/players/
+/plugins/
+/resource_packs/
+/behavior_packs/
+/cache/
+/crashdumps/
+/server.properties
+/nukkit.yml
+/pnx.yml
+/ops.txt
+/white-list.txt
+/whitelist.json
+/banned-ips.json
+/banned-players.json
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+*.local
+
+# Logs and temporary files
+*.log
+*.tmp
+*.swp
+*~
+
+# Operating systems
+.DS_Store
+Thumbs.db
+Desktop.ini

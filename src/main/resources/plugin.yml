@@ -1,0 +1,5 @@
+name: PNX-ToolBox
+main: valres.toolbox.ToolBox
+version: "1.0.0"
+api: ["3.0.0"]
+author: Root-Studios (Valres)
