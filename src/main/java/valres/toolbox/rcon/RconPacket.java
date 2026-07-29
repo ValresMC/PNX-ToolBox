@@ -1,5 +1,6 @@
 package valres.toolbox.rcon;
 
+import org.jspecify.annotations.NonNull;
 import valres.toolbox.rcon.exception.RconProtocolException;
 
 import java.nio.ByteBuffer;
@@ -11,17 +12,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Objects;
 
-final public class RconPacket {
+public record RconPacket(int requestId, int type, String payload) {
     final public static int MINIMUM_BODY_SIZE = 10;
 
-    final private int requestId;
-    final private int type;
-    final private String payload;
-
-    public RconPacket(int requestId, int type, String payload) {
-        this.requestId = requestId;
-        this.type = type;
-        this.payload = Objects.requireNonNull(payload, "RCON payload cannot be null");
+    public RconPacket {
+        payload = Objects.requireNonNull(payload, "RCON payload cannot be null");
 
         if (payload.indexOf('\0') >= 0) {
             throw new RconProtocolException(
@@ -93,5 +88,13 @@ final public class RconPacket {
 
     public String getPayload() {
         return this.payload;
+    }
+
+    @Override public @NonNull String toString() {
+        return "RconPacket[requestId=%d, type=%d, payloadBytes=%d]".formatted(
+            this.requestId,
+            this.type,
+            this.payload.getBytes(StandardCharsets.UTF_8).length
+        );
     }
 }
