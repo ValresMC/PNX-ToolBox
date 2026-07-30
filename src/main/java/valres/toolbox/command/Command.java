@@ -1,6 +1,8 @@
 package valres.toolbox.command;
 
 import org.powernukkitx.Player;
+import org.powernukkitx.Server;
+import org.powernukkitx.command.CommandMap;
 import org.powernukkitx.command.CommandSender;
 import org.powernukkitx.command.PluginIdentifiableCommand;
 import org.powernukkitx.command.data.CommandDataVersions;
@@ -8,8 +10,6 @@ import org.powernukkitx.command.data.CommandParameter;
 import org.powernukkitx.permission.Permission;
 import org.powernukkitx.plugin.Plugin;
 import org.powernukkitx.plugin.PluginManager;
-import valres.toolbox.command.annotation.CommandInfo;
-import valres.toolbox.command.annotation.CommandPermission;
 import valres.toolbox.command.argument.Argument;
 import valres.toolbox.command.exception.CommandConfigurationException;
 import valres.toolbox.command.exception.CommandInputException;
@@ -30,28 +30,17 @@ import java.util.Map;
 import java.util.Objects;
 
 abstract public class Command extends org.powernukkitx.command.Command implements PluginIdentifiableCommand {
-    final private Plugin plugin;
+    private Plugin plugin;
     final private CommandNodeData data;
 
     private String commandPermission;
     private boolean initializing;
     private boolean initialized;
 
-    protected Command(Plugin plugin) {
+    protected Command() {
         super();
 
-        this.plugin = Objects.requireNonNull(plugin, "Owning plugin cannot be null");
-        CommandInfo info = this.getClass().getAnnotation(CommandInfo.class);
-        if (info == null) {
-            throw new CommandConfigurationException(
-                "Command " + this.getClass().getName() + " needs @CommandInfo or an explicit constructor"
-            );
-        }
-
-        this.setName(info.name());
-        this.setDescription(info.description());
-        this.setAliases(info.aliases());
-        this.data = new CommandNodeData(info.name(), info.description(), info.aliases());
+        this.data = new CommandNodeData("pending", "", new String[0]);
     }
 
     protected Command(Plugin plugin, String name) {
@@ -65,9 +54,22 @@ abstract public class Command extends org.powernukkitx.command.Command implement
         this.data = new CommandNodeData(name, description, aliases);
     }
 
-    @Override
-    final public Plugin getPlugin() {
+    @Override final public synchronized Plugin getPlugin() {
+        if (this.plugin == null) {
+            this.plugin = resolveOwningPlugin(this.getClass());
+        }
         return this.plugin;
+    }
+
+    @Override public boolean register(CommandMap commandMap) {
+        this.initialize();
+        return super.register(commandMap);
+    }
+
+    @Override final public void enableCommandTree() {
+    }
+
+    @Override final public void enableParamTree() {
     }
 
     final public synchronized void initialize() {
@@ -82,6 +84,7 @@ abstract public class Command extends org.powernukkitx.command.Command implement
 
         this.initializing = true;
         try {
+            this.applyNativeMetadata();
             this.data.loadAnnotatedArguments(this.getClass());
             this.resolvePermission();
             this.configure();
@@ -249,8 +252,7 @@ abstract public class Command extends org.powernukkitx.command.Command implement
         }
     }
 
-    @Override
-    final public boolean execute(CommandSender sender, String commandLabel, String[] args) {
+    @Override final public boolean execute(CommandSender sender, String commandLabel, String[] args) {
         CommandResult result = this.dispatch(sender, commandLabel, args);
         if (result instanceof CommandSuccess success) {
             this.success(success);
@@ -261,8 +263,7 @@ abstract public class Command extends org.powernukkitx.command.Command implement
         return result.isSuccess();
     }
 
-    @Override
-    public CommandDataVersions generateCustomCommandData(Player player) {
+    @Override public CommandDataVersions generateCustomCommandData(Player player) {
         this.initialize();
 
         return super.generateCustomCommandData(player);
@@ -287,14 +288,14 @@ abstract public class Command extends org.powernukkitx.command.Command implement
             );
         }
         if (result.cause() != null && result.reason() == CommandFailureReason.EXECUTION_ERROR) {
-            this.plugin.getLogger().error(
+            this.getPlugin().getLogger().error(
                 "Command /" + this.getName() + " failed", result.cause()
             );
         }
     }
 
     final void registerPermission(String permission, String description, String defaultValue) {
-        PluginManager pluginManager = this.plugin.getServer().getPluginManager();
+        PluginManager pluginManager = this.getPlugin().getServer().getPluginManager();
         if (pluginManager.getPermission(permission) != null) {
             return;
         }
@@ -308,7 +309,7 @@ abstract public class Command extends org.powernukkitx.command.Command implement
         }
 
         this.rebuildDefinition();
-        for (Player player : this.plugin.getServer().getOnlinePlayers().values()) {
+        for (Player player : this.getPlugin().getServer().getOnlinePlayers().values()) {
             player.syncAvailableCommands();
         }
     }
@@ -335,16 +336,28 @@ abstract public class Command extends org.powernukkitx.command.Command implement
     }
 
     private void resolvePermission() {
-        CommandPermission definition = this.getClass().getAnnotation(CommandPermission.class);
-        this.commandPermission = definition == null || definition.value().isBlank()
+        String nativePermission = this.getPermission();
+        this.commandPermission = nativePermission == null || nativePermission.isBlank()
             ? this.getName().toLowerCase(Locale.ROOT) + ".command"
-            : definition.value();
-        String defaultValue = definition == null
-            ? Permission.DEFAULT_OP
-            : definition.defaultValue();
+            : nativePermission;
 
-        this.registerPermission(this.commandPermission, this.getDescription(), defaultValue);
+        this.registerPermission(
+            this.commandPermission,
+            this.getDescription(),
+            Permission.DEFAULT_OP
+        );
         this.setPermission(this.commandPermission);
+    }
+
+    private void applyNativeMetadata() {
+        String name = this.getName();
+        if (name == null || name.isBlank()) {
+            throw new CommandConfigurationException(
+                "Command " + this.getClass().getName() + " needs PNX @CommandDefinition or an explicit name constructor"
+            );
+        }
+
+        this.data.updateMetadata(name, this.getDescription(), this.getAliases());
     }
 
     private void addPermissionRule() {
@@ -405,5 +418,27 @@ abstract public class Command extends org.powernukkitx.command.Command implement
         }
 
         return lines;
+    }
+
+    private static Plugin resolveOwningPlugin(Class<?> commandType) {
+        Server server = Server.getInstance();
+        if (server == null) {
+            throw new CommandConfigurationException(
+                "Cannot resolve the owning plugin for command " + commandType.getName() + " before the server is initialized"
+            );
+        }
+
+        ClassLoader commandLoader = commandType.getClassLoader();
+        List<Plugin> matches = server.getPluginManager().getPlugins().values().stream()
+            .filter(plugin -> plugin.getClass().getClassLoader() == commandLoader)
+            .toList();
+
+        if (matches.size() != 1) {
+            throw new CommandConfigurationException(
+                "Unable to resolve exactly one owning plugin for command " + commandType.getName() + "; found " + matches.size()
+            );
+        }
+
+        return matches.getFirst();
     }
 }

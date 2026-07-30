@@ -26,15 +26,19 @@ import java.util.regex.Pattern;
 final class CommandNodeData {
     final private static Pattern VALID_NAME = Pattern.compile("^[a-z0-9_-]+$");
 
-    final private String name;
-    final private String description;
-    final private List<String> aliases;
+    private String name;
+    private String description;
+    private List<String> aliases;
     final private List<Argument<?>> arguments = new ArrayList<>();
     final private List<Rule> rules = new ArrayList<>();
     final private List<SubCommand> subCommands = new ArrayList<>();
     final private Map<String, SubCommand> subCommandLookup = new LinkedHashMap<>();
 
     public CommandNodeData(String name, String description, String[] aliases) {
+        this.updateMetadata(name, description, aliases);
+    }
+
+    public void updateMetadata(String name, String description, String[] aliases) {
         this.name = normalizeName(name, "Command name");
         this.description = Objects.requireNonNullElse(description, "");
 

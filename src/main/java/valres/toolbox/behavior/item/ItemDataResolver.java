@@ -14,6 +14,7 @@ import valres.toolbox.behavior.item.builder.ItemBuilder;
 import valres.toolbox.behavior.item.builder.LegacyItemBuilder;
 import valres.toolbox.behavior.item.components.BlockPlacerItemComponent;
 import valres.toolbox.behavior.item.components.DisplayNameComponent;
+import valres.toolbox.behavior.item.components.DiggerComponent;
 import valres.toolbox.behavior.item.components.DurabilityComponent;
 import valres.toolbox.behavior.item.components.DyeableComponent;
 import valres.toolbox.behavior.item.components.EnchantableComponent;
@@ -24,7 +25,9 @@ import valres.toolbox.behavior.item.components.HandEquippedComponent;
 import valres.toolbox.behavior.item.components.MaxStackSizeComponent;
 import valres.toolbox.behavior.item.components.StackByDataComponent;
 import valres.toolbox.behavior.item.components.WearableItemComponent;
+import valres.toolbox.behavior.item.components.type.BlockDescriptor;
 import valres.toolbox.behavior.item.components.type.EnchantSlot;
+import valres.toolbox.behavior.item.tool.ToolTierProvider;
 import valres.toolbox.behavior.item.properties.CanDestroyInCreativeProperty;
 import valres.toolbox.behavior.item.properties.DamageProperty;
 import valres.toolbox.behavior.item.properties.HandEquippedProperty;
@@ -36,6 +39,8 @@ import valres.toolbox.behavior.item.properties.ShouldDespawnProperty;
 import valres.toolbox.behavior.item.properties.StackedByDataProperty;
 import valres.toolbox.behavior.item.properties.UseAnimationProperty;
 import valres.toolbox.behavior.item.properties.UseDurationProperty;
+
+import java.util.List;
 
 final public class ItemDataResolver {
     private ItemDataResolver() {
@@ -74,7 +79,7 @@ final public class ItemDataResolver {
         builder.addProperty(new CanDestroyInCreativeProperty(!item.isSword()));
         builder.addProperty(new LiquidClippedProperty(item instanceof ItemBucket));
 
-        Float miningSpeed = detectMiningSpeed(item);
+        Integer miningSpeed = detectMiningSpeed(item);
         if (miningSpeed != null) {
             builder.addProperty(new MiningSpeedProperty(miningSpeed));
         }
@@ -99,6 +104,12 @@ final public class ItemDataResolver {
         builder.addComponent(new DisplayNameComponent(
             "item." + builder.getIdentifier() + ".name"
         ));
+
+        Integer miningSpeed = detectMiningSpeed(item);
+        DiggerComponent digger = createDefaultDigger(item, miningSpeed);
+        if (digger != null) {
+            builder.addComponent(digger);
+        }
 
         int enchantAbility = item.getEnchantAbility();
         if (enchantAbility > 0) {
@@ -239,21 +250,65 @@ final public class ItemDataResolver {
         };
     }
 
-    private static Float detectMiningSpeed(@NonNull Item item) {
+    private static Integer detectMiningSpeed(@NonNull Item item) {
         if (!item.isTool()) {
             return null;
         }
 
+        if (item instanceof ToolTierProvider provider) {
+            return provider.getToolTier().miningSpeed();
+        }
+
         return switch (item.getTier()) {
-            case ItemTool.TIER_WOODEN -> 2f;
-            case ItemTool.TIER_GOLD -> 12f;
-            case ItemTool.TIER_STONE -> 4f;
-            case ItemTool.TIER_COPPER -> 5f;
-            case ItemTool.TIER_IRON -> 6f;
-            case ItemTool.TIER_DIAMOND -> 8f;
-            case ItemTool.TIER_NETHERITE -> 9f;
-            default -> 1f;
+            case ItemTool.TIER_WOODEN -> 2;
+            case ItemTool.TIER_GOLD -> 12;
+            case ItemTool.TIER_STONE -> 4;
+            case ItemTool.TIER_COPPER -> 5;
+            case ItemTool.TIER_IRON -> 6;
+            case ItemTool.TIER_DIAMOND -> 8;
+            case ItemTool.TIER_NETHERITE -> 9;
+            default -> 1;
         };
+    }
+
+    private static DiggerComponent createDefaultDigger(
+        @NonNull Item item,
+        Integer miningSpeed
+    ) {
+        if (miningSpeed == null) {
+            return null;
+        }
+
+        String tags = detectDiggerTags(item);
+        if (tags == null) {
+            return null;
+        }
+
+        return new DiggerComponent(
+            List.of(DiggerComponent.destroySpeed(
+                BlockDescriptor.tagged(tags),
+                miningSpeed
+            )),
+            true
+        );
+    }
+
+    private static String detectDiggerTags(@NonNull Item item) {
+        if (item.isPickaxe()) {
+            return "q.any_tag('stone', 'metal', 'diamond_pick_diggable', "
+                + "'mob_spawner', 'rail', 'slab_block', 'stair_block', "
+                + "'smooth stone slab', 'sandstone slab', 'cobblestone slab', "
+                + "'brick slab', 'stone bricks slab', 'quartz slab', "
+                + "'nether brick slab')";
+        }
+        if (item.isAxe()) {
+            return "q.any_tag('wood', 'pumpkin', 'plant')";
+        }
+        if (item.isShovel()) {
+            return "q.any_tag('sand', 'dirt', 'gravel', 'grass', 'snow')";
+        }
+
+        return null;
     }
 
     private static @NonNull String toRgbaHex(@NonNull BlockColor color) {

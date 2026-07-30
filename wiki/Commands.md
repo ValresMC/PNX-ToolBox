@@ -6,28 +6,31 @@ Instead of parsing raw strings in a large `execute()` method, each command node 
 
 ## Registering commands
 
-Keep one `CommandRegistry` in your plugin and close it when the plugin stops:
+Root commands use PNX's native `@CommandDefinition`. Its annotation processor
+constructs, configures and registers the command, so no `CommandRegistry` or
+manual registration is needed:
 
 ```java
+@PluginMeta(
+    name = "ExamplePlugin",
+    version = "1.0.0",
+    api = {"3.0.0"},
+    depend = {"PNX-ToolBox"}
+)
 public final class ExamplePlugin extends PluginBase {
-    private CommandRegistry commands;
+    private final CoinsService coins = new CoinsService();
 
-    @Override
-    public void onEnable() {
-        this.commands = new CommandRegistry(this);
-        this.commands.register(new CoinsCommand(this, new CoinsService()));
-    }
-
-    @Override
-    public void onDisable() {
-        if (this.commands != null) {
-            this.commands.close();
-        }
+    public CoinsService coins() {
+        return this.coins;
     }
 }
 ```
 
-Registration and unregistration automatically synchronize the available commands of online players.
+`@PluginMeta` is required for the native PNX processor to generate its plugin
+bootstrap. Explicit constructors and `CommandRegistry` remain available only
+for commands that must be created dynamically at runtime. The native
+`commandMode` can keep its default value: the toolbox disables PNX's route tree
+and installs its own typed overloads during registration.
 
 ## Root command and subcommand
 
@@ -36,23 +39,17 @@ This example creates `/coins give <player> <amount>`.
 ### Root command
 
 ```java
-@CommandInfo(
+@CommandDefinition(
     name = "coins",
     description = "Manage player coins",
-    aliases = {"money"}
+    aliases = {"money"},
+    permission = "example.coins"
 )
-@CommandPermission("example.coins")
 public final class CoinsCommand extends Command {
-    private final CoinsService coins;
-
-    public CoinsCommand(Plugin plugin, CoinsService coins) {
-        super(plugin);
-        this.coins = coins;
-    }
-
     @Override
     protected void configure() {
-        this.addSubCommand(new GiveCoinsSubCommand(this.coins));
+        ExamplePlugin plugin = (ExamplePlugin) this.getPlugin();
+        this.addSubCommand(new GiveCoinsSubCommand(plugin.coins()));
     }
 
     @Override
@@ -66,7 +63,7 @@ public final class CoinsCommand extends Command {
 ### `give` subcommand
 
 ```java
-@CommandInfo(name = "give", description = "Give coins to a player")
+@SubCommandDefinition(name = "give", description = "Give coins to a player")
 @CommandArgument(
     order = 0,
     name = "player",
@@ -106,6 +103,8 @@ public final class GiveCoinsSubCommand extends SubCommand {
 ```
 
 Subcommands can contain other subcommands by calling `addSubCommand()` in their `configure()` method.
+PNX does not support `@CommandDefinition` on non-command nodes, so toolbox
+subcommands use the dedicated `@SubCommandDefinition` annotation.
 
 ## Arguments
 
@@ -185,24 +184,25 @@ Available rules:
 - `Rules.cooldown(Duration)`
 - `Rules.predicate(Predicate<CommandSender>, failureMessage)`
 
-`@CommandPermission` creates and applies a permission rule automatically. Without an explicit annotation, a root command named `coins` receives `coins.command`. Its `give` subcommand receives `coins.command.give`. When the root permission is explicitly `example.coins`, the generated subcommand permission becomes `example.coins.give`.
+Set the root permission with `@CommandDefinition(permission = "example.coins")`.
+When the field is empty, a root command named `coins` receives `coins.command`.
+Subcommand permissions are always derived from the root: `give` receives
+`example.coins.give` in this example. All generated permissions default to
+operators. Add `Rules.permission(...)` when a node needs an additional check.
 
 ## Live refresh
 
 Use a dynamic enum when completion values come from runtime data:
 
 ```java
+@CommandDefinition(name = "warp", description = "Teleport to a warp")
 public final class WarpCommand extends Command {
-    private final WarpService warps;
+    private WarpService warps;
     private DynamicEnumArgument warpArgument;
-
-    public WarpCommand(Plugin plugin, WarpService warps) {
-        super(plugin, "warp", "Teleport to a warp");
-        this.warps = warps;
-    }
 
     @Override
     protected void configure() {
+        this.warps = ((ExamplePlugin) this.getPlugin()).warps();
         this.warpArgument = Arguments.dynamicEnum("warp", this.warps::names);
         this.addArgument(this.warpArgument);
         this.addRule(Rules.onlyPlayer());
@@ -224,20 +224,19 @@ Call `DynamicEnumArgument.refresh()` after changing a soft enum's values. Call `
 
 ## Before: native PowerNukkitX
 
-A native PNX command must manually declare overloads, validate permissions, identify subcommands, parse arguments, handle errors and register itself:
+`@CommandDefinition` handles native registration, but a plain PNX command must
+still declare overloads, identify subcommands, parse arguments and handle errors
+itself:
 
 ```java
-public final class CoinsCommand extends org.powernukkitx.command.Command
-    implements PluginIdentifiableCommand {
-
-    private final Plugin plugin;
-    private final CoinsService coins;
-
-    public CoinsCommand(Plugin plugin, CoinsService coins) {
-        super("coins", "Manage player coins", "/coins give <player> <amount>");
-        this.plugin = plugin;
-        this.coins = coins;
-        this.setPermission("example.coins");
+@CommandDefinition(
+    name = "coins",
+    description = "Manage player coins",
+    permission = "example.coins"
+)
+public final class CoinsCommand extends org.powernukkitx.command.Command {
+    public CoinsCommand() {
+        super();
 
         this.setCommandParameters(Map.of(
             "give",
@@ -274,22 +273,10 @@ public final class CoinsCommand extends org.powernukkitx.command.Command
             return false;
         }
 
-        this.coins.add(player, amount);
+        ExamplePlugin.getInstance().coins().add(player, amount);
         return true;
     }
-
-    @Override
-    public Plugin getPlugin() {
-        return this.plugin;
-    }
 }
-```
-
-```java
-getServer().getCommandMap().register(
-    getName().toLowerCase(),
-    new CoinsCommand(this, coinsService)
-);
 ```
 
 ## After: PNX-ToolBox
@@ -297,12 +284,16 @@ getServer().getCommandMap().register(
 With PNX-ToolBox, parsing and Bedrock overload generation come from the command definition:
 
 ```java
-@CommandInfo(name = "coins", description = "Manage player coins")
-@CommandPermission("example.coins")
+@CommandDefinition(
+    name = "coins",
+    description = "Manage player coins",
+    permission = "example.coins"
+)
 public final class CoinsCommand extends Command {
-    public CoinsCommand(Plugin plugin, CoinsService coins) {
-        super(plugin);
-        this.addSubCommand(new GiveCoinsSubCommand(coins));
+    @Override
+    protected void configure() {
+        ExamplePlugin plugin = (ExamplePlugin) this.getPlugin();
+        this.addSubCommand(new GiveCoinsSubCommand(plugin.coins()));
     }
 
     @Override
@@ -312,7 +303,7 @@ public final class CoinsCommand extends Command {
     }
 }
 
-@CommandInfo(name = "give")
+@SubCommandDefinition(name = "give")
 @CommandArgument(order = 0, name = "player", type = CommandArgumentType.PLAYER)
 @CommandArgument(order = 1, name = "amount", type = CommandArgumentType.INTEGER)
 public final class GiveCoinsSubCommand extends SubCommand {
@@ -332,5 +323,6 @@ public final class GiveCoinsSubCommand extends SubCommand {
 }
 ```
 
-The framework now owns input validation, usage messages, permission creation, nested routing, overload generation and player synchronization.
-
+PNX owns construction and registration through `@CommandDefinition`. The
+toolbox owns input validation, usage messages, permission creation, nested
+routing, overload generation and player synchronization.

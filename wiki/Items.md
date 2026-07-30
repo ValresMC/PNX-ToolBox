@@ -58,6 +58,50 @@ The registry allocates the runtime ID and derives the icon, display name key, st
 
 The expected resource-pack texture path is the identifier path. For `example:ruby_sword`, use `ruby_sword` in the resource pack.
 
+## Custom tools and tiers
+
+Extend `TieredItemTool` to keep the PowerNukkitX behavior and the generated
+Bedrock components in sync. A tier contains its harvest level, mining speed,
+base attack damage, durability and enchantability:
+
+```java
+@DataDrivenItem
+public final class RubyPickaxe extends TieredItemTool {
+    private static final ToolTier RUBY = new ToolTier(
+        8,    // Harvest level
+        10,   // Mining speed
+        9,    // Base attack damage (sword)
+        2000, // Durability
+        18    // Enchantability
+    );
+
+    public RubyPickaxe() {
+        super("example:ruby_pickaxe", RUBY);
+    }
+
+    @Override
+    public boolean isPickaxe() {
+        return true;
+    }
+}
+```
+
+`ToolTier` also provides the `WOODEN`, `GOLD`, `STONE`, `COPPER`, `IRON`,
+`DIAMOND` and `NETHERITE` constants. For pickaxes, axes and shovels, the toolbox
+generates `minecraft:digger` with the appropriate block tags and enables the
+Efficiency enchantment. Existing `ItemTool` implementations receive the same
+automatic component from their vanilla tier.
+
+Attack damage is derived from the tier and tool type: swords use the base
+damage, axes use `base - 1`, pickaxes and hoes use `base - 2`, and shovels and
+spears use `base - 3`. Reduced values never go below `1`. Extend
+`TieredItemSpear` instead of `TieredItemTool` for a spear so its native PNX
+lunge and stab behavior is preserved.
+
+Implement `DataDrivenExtraComponentsInterface` and add another
+`DiggerComponent` only when an item needs custom block rules. The explicitly
+added component replaces the generated default.
+
 ## Adding components and properties
 
 Implement `DataDrivenExtraComponentsInterface` when an item needs additional data:

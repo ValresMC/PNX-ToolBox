@@ -1,7 +1,6 @@
 package valres.toolbox.command;
 
-import valres.toolbox.command.annotation.CommandInfo;
-import valres.toolbox.command.annotation.CommandPermission;
+import valres.toolbox.command.annotation.SubCommandDefinition;
 import valres.toolbox.command.argument.Argument;
 import valres.toolbox.command.exception.CommandConfigurationException;
 import valres.toolbox.command.rules.PermissionRule;
@@ -20,10 +19,13 @@ abstract public class SubCommand {
     private boolean initialized;
 
     protected SubCommand() {
-        CommandInfo info = this.getClass().getAnnotation(CommandInfo.class);
+        SubCommandDefinition info = this.getClass().getAnnotation(
+            SubCommandDefinition.class
+        );
         if (info == null) {
             throw new CommandConfigurationException(
-                "Sub-command " + this.getClass().getName() + " needs @CommandInfo or an explicit constructor"
+                "Sub-command " + this.getClass().getName()
+                    + " needs @SubCommandDefinition or an explicit constructor"
             );
         }
 
@@ -167,24 +169,21 @@ abstract public class SubCommand {
         }
         this.command = command;
 
-        CommandPermission definition = this.getClass().getAnnotation(CommandPermission.class);
         String generatedPermission = command.getCommandPermission() + "." + String.join(".", path);
-        String permissionName = definition == null || definition.value().isBlank()
-            ? generatedPermission
-            : definition.value();
-        String defaultValue = definition == null
-            ? org.powernukkitx.permission.Permission.DEFAULT_OP
-            : definition.defaultValue();
 
-        if (!Objects.equals(this.permission, permissionName)) {
-            this.permission = permissionName;
-            command.registerPermission(permissionName, this.getDescription(), defaultValue);
+        if (!Objects.equals(this.permission, generatedPermission)) {
+            this.permission = generatedPermission;
+            command.registerPermission(
+                generatedPermission,
+                this.getDescription(),
+                org.powernukkitx.permission.Permission.DEFAULT_OP
+            );
             boolean hasRule = this.getRules().stream()
                 .filter(PermissionRule.class::isInstance)
                 .map(PermissionRule.class::cast)
-                .anyMatch(rule -> rule.getPermission().equals(permissionName));
+                .anyMatch(rule -> rule.getPermission().equals(generatedPermission));
             if (!hasRule) {
-                this.data.addRule(new PermissionRule(permissionName));
+                this.data.addRule(new PermissionRule(generatedPermission));
             }
         }
 
