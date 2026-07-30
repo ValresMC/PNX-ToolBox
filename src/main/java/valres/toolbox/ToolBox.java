@@ -4,6 +4,9 @@ import org.powernukkitx.plugin.PluginBase;
 import org.powernukkitx.scheduler.Task;
 import org.powernukkitx.scheduler.TaskHandler;
 import org.powernukkitx.utils.Config;
+import valres.toolbox.behavior.item.CustomItemRegistry;
+import valres.toolbox.command.CommandMessages;
+import valres.toolbox.listener.ItemRegistryPacketListener;
 import valres.toolbox.manager.ManagersHandler;
 import valres.toolbox.rcon.Rcon;
 import valres.toolbox.rcon.RconCommandExecutor;
@@ -26,20 +29,23 @@ final public class ToolBox extends PluginBase {
     public static ToolBox getInstance() {
         if (INSTANCE == null) {
             throw new IllegalStateException(
-                    "PNX-ToolBox is not enabled."
+                "PNX-ToolBox is not enabled."
             );
         }
 
         return INSTANCE;
     }
 
-    @Override public void onLoad() {
+    @Override
+    public void onLoad() {
         INSTANCE = this;
 
         this.saveResource("rcon-config.yml");
+        CommandMessages.load(this);
     }
 
-    @Override public void onEnable() {
+    @Override
+    public void onEnable() {
         Config config = new Config(this.getDataFolder() + "/rcon-config.yml");
         if (!config.getBoolean("enabled", false)) {
             this.getLogger().info("RCON is disabled");
@@ -60,12 +66,16 @@ final public class ToolBox extends PluginBase {
         } catch (RconException | ArithmeticException exception) {
             this.getLogger().error("Unable to start RCON; check rcon-config.yml", exception);
         }
+
+        this.getServer().getPluginManager().registerEvents(new ItemRegistryPacketListener(CustomItemRegistry.getInstance()), this);
     }
 
-    @Override public void onDisable() {
+    @Override
+    public void onDisable() {
         this.stopRcon();
 
         this.handlers.clear();
+        CommandMessages.reset();
         INSTANCE = null;
     }
 
@@ -84,11 +94,12 @@ final public class ToolBox extends PluginBase {
         Rcon startedRcon = new Rcon(this.getServer(), this.getLogger(), settings, commandExecutor);
         try {
             TaskHandler startedTask = this.getServer().getScheduler().scheduleRepeatingTask(new Task() {
-                @Override public void onRun(int currentTick) {
-                Rcon activeRcon = rcon;
-                if (activeRcon != null) {
-                    activeRcon.check();
-                }
+                @Override
+                public void onRun(int currentTick) {
+                    Rcon activeRcon = rcon;
+                    if (activeRcon != null) {
+                        activeRcon.check();
+                    }
                 }
             }, 1);
 
@@ -117,6 +128,10 @@ final public class ToolBox extends PluginBase {
 
     public synchronized boolean isRconRunning() {
         return this.rcon != null && this.rcon.isRunning();
+    }
+
+    public void reloadCommandMessages() {
+        CommandMessages.reload();
     }
 
     public ManagersHandler createManagerHandler(PluginBase plugin) {
