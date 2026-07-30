@@ -66,8 +66,11 @@ final public class CustomItemRegistry {
             );
         }
 
-        LegacyItemBuilder builder = LegacyItemBuilder.create(item).setRuntimeId(item.getRuntimeId());
+        int runtimeId = this.allocateRuntimeId();
+        LegacyItemBuilder builder = LegacyItemBuilder.create(item).setRuntimeId(runtimeId);
+
         this.applyItemComponents(builder);
+        this.deepRegister(builder);
     }
 
     public void registerDataDrivenItem(String identifier, Item item) {
@@ -80,8 +83,11 @@ final public class CustomItemRegistry {
             );
         }
 
-        DataDrivenItemBuilder builder = DataDrivenItemBuilder.create(item).setRuntimeId(item.getRuntimeId());
+        int runtimeId = this.allocateRuntimeId();
+        DataDrivenItemBuilder builder = DataDrivenItemBuilder.create(item).setRuntimeId(runtimeId);
+
         this.applyItemComponents(builder);
+        this.deepRegister(builder);
     }
 
     public void applyItemComponents(ItemBuilder<?> builder) {

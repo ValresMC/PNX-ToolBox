@@ -46,6 +46,8 @@ final public class ToolBox extends PluginBase {
 
     @Override
     public void onEnable() {
+        this.getServer().getPluginManager().registerEvents(new ItemRegistryPacketListener(CustomItemRegistry.getInstance()), this);
+        
         Config config = new Config(this.getDataFolder() + "/rcon-config.yml");
         if (!config.getBoolean("enabled", false)) {
             this.getLogger().info("RCON is disabled");
@@ -66,8 +68,6 @@ final public class ToolBox extends PluginBase {
         } catch (RconException | ArithmeticException exception) {
             this.getLogger().error("Unable to start RCON; check rcon-config.yml", exception);
         }
-
-        this.getServer().getPluginManager().registerEvents(new ItemRegistryPacketListener(CustomItemRegistry.getInstance()), this);
     }
 
     @Override
