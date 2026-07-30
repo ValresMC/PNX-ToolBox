@@ -4,6 +4,8 @@ final public class ItemPropertyNames {
     final public static String ALLOW_OFF_HAND = "allow_off_hand";
     final public static String BLOCK = "block";
     final public static String CAN_DESTROY_IN_CREATIVE = "can_destroy_in_creative";
+    final public static String CREATIVE_CATEGORY = "creative_category";
+    final public static String CREATIVE_GROUP = "creative_group";
     final public static String DAMAGE = "damage";
     final public static String FOIL = "foil";
     final public static String GLINT = "glint";

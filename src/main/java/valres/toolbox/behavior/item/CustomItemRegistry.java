@@ -6,6 +6,7 @@ import org.powernukkitx.item.Item;
 import org.powernukkitx.registry.ItemRuntimeIdRegistry;
 import org.powernukkitx.registry.RegisterException;
 import org.powernukkitx.registry.Registries;
+import valres.toolbox.behavior.creative.CreativeInventoryManager;
 import valres.toolbox.behavior.item.builder.DataDrivenItemBuilder;
 import valres.toolbox.behavior.item.builder.ItemBuilder;
 import valres.toolbox.behavior.item.builder.LegacyItemBuilder;
@@ -105,6 +106,8 @@ final public class CustomItemRegistry {
             if (item instanceof DataDrivenExtraComponentsInterface item_) {
                 (item_).defineDataDrivenComponent(builder_);
             }
+
+            CreativeInventoryManager.getInstance().applyDefinition(builder_);
         } else if (builder instanceof LegacyItemBuilder builder_) {
             if (item instanceof DataDrivenExtraComponentsInterface) {
                 throw new IllegalStateException(
@@ -157,7 +160,7 @@ final public class CustomItemRegistry {
         this.items.put(identifier, data);
         this.typeIds.put(runtimeId, identifier);
 
-        Registries.CREATIVE.addCreativeItem(item);
+        CreativeInventoryManager.getInstance().addToCreative(item);
     }
 
     private void valideIdentifier(String identifier) {
