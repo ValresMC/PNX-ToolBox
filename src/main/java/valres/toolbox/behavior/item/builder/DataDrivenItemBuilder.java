@@ -1,0 +1,120 @@
+package valres.toolbox.behavior.item.builder;
+
+import org.jspecify.annotations.NonNull;
+import org.cloudburstmc.protocol.bedrock.data.inventory.ItemVersion;
+import org.powernukkitx.item.Item;
+import org.powernukkitx.nbt.tag.CompoundTag;
+import org.powernukkitx.tags.ItemTags;
+import valres.toolbox.behavior.item.components.DataDrivenItemComponent;
+import valres.toolbox.behavior.item.components.TagsComponent;
+import valres.toolbox.behavior.item.properties.DataDrivenItemProperty;
+
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+public class DataDrivenItemBuilder extends ItemBuilder<DataDrivenItemBuilder> {
+    final private Map<String, DataDrivenItemComponent> components = new LinkedHashMap<>();
+    final private Map<String, DataDrivenItemProperty> properties = new LinkedHashMap<>();
+
+    protected DataDrivenItemBuilder(Item item) {
+        super(item);
+    }
+
+    public static DataDrivenItemBuilder create(Item item) {
+        return new DataDrivenItemBuilder(item);
+    }
+
+    @Override public ItemVersion getFormat() {
+        return ItemVersion.DATA_DRIVEN;
+    }
+
+    @Override public CompoundTag toNBT() {
+        CompoundTag components = new CompoundTag();
+        CompoundTag properties = new CompoundTag();
+
+        for (Map.Entry<String, DataDrivenItemProperty> entry : this.properties.entrySet()) {
+            String identifier = entry.getKey();
+            DataDrivenItemProperty property = entry.getValue();
+
+            properties.put(identifier, property.toNBT());
+        }
+
+        for (Map.Entry<String, DataDrivenItemComponent> entry : this.components.entrySet()) {
+            String identifier = entry.getKey();
+            DataDrivenItemComponent component = entry.getValue();
+
+            components.put(identifier, component.toNBT());
+            this.registerTags(component);
+        }
+
+        components.putCompound(ItemBuilder.TAG_ITEM_PROPERTIES, properties);
+
+        return new CompoundTag()
+            .putInt(ItemBuilder.TAG_ID, this.getRuntimeId())
+            .putString(ItemBuilder.TAG_NAME, this.getIdentifier())
+            .putCompound(ItemBuilder.TAG_COMPONENTS, components);
+    }
+
+    public Map<String, DataDrivenItemComponent> getComponents() {
+        return Collections.unmodifiableMap(this.components);
+    }
+
+    public DataDrivenItemBuilder addComponent(@NonNull DataDrivenItemComponent component) {
+        String identifier = component.getIdentifier();
+        if (identifier.isBlank()) {
+            throw new IllegalArgumentException(
+                "Component identifier cannot be empty"
+            );
+        }
+
+        this.components.put(identifier, component);
+        return this;
+    }
+
+    public DataDrivenItemBuilder removeComponent(@NonNull String componentId) {
+        this.components.remove(componentId);
+        return this;
+    }
+
+    public boolean hasComponent(String componentId) {
+        return this.components.containsKey(componentId);
+    }
+
+    public Map<String, DataDrivenItemProperty> getProperties() {
+        return Collections.unmodifiableMap(this.properties);
+    }
+
+    public DataDrivenItemBuilder addProperty(@NonNull DataDrivenItemProperty property) {
+        String identifier = property.getIdentifier();
+        if (identifier.isBlank()) {
+            throw new IllegalArgumentException(
+                "Property identifier cannot be empty"
+            );
+        }
+
+        this.properties.put(identifier, property);
+        return this;
+    }
+
+    public DataDrivenItemBuilder removeProperty(@NonNull String propertyId) {
+        this.properties.remove(propertyId);
+        return this;
+    }
+
+    public boolean hasProperty(String propertyId) {
+        return this.properties.containsKey(propertyId);
+    }
+
+    @Override protected DataDrivenItemBuilder self() {
+        return this;
+    }
+
+    private void registerTags(DataDrivenItemComponent component) {
+        if (!(component instanceof TagsComponent tagsComponent)) {
+            return;
+        }
+
+        ItemTags.register(this.getIdentifier(), tagsComponent.getTags());
+    }
+}
