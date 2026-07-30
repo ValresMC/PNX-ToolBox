@@ -1,19 +1,28 @@
 package valres.toolbox.behavior.creative;
 
 import org.jspecify.annotations.NonNull;
+import org.powernukkitx.block.Block;
+import org.powernukkitx.block.BlockCrops;
+import org.powernukkitx.block.BlockOre;
+import org.powernukkitx.block.BlockSapling;
 import org.powernukkitx.item.Item;
+import org.powernukkitx.item.SpawnEggPickable;
 import org.powernukkitx.item.customitem.data.CreativeCategory;
 import org.powernukkitx.item.customitem.data.CreativeGroup;
 import org.powernukkitx.nbt.tag.CompoundTag;
 import org.powernukkitx.registry.CreativeItemRegistry;
 import org.powernukkitx.registry.Registries;
+import org.powernukkitx.tags.ItemTags;
 import valres.toolbox.behavior.annotation.CreativeInventoryInfo;
 import valres.toolbox.behavior.item.builder.DataDrivenItemBuilder;
 import valres.toolbox.behavior.item.properties.CreativeCategoryProperty;
 import valres.toolbox.behavior.item.properties.CreativeGroupProperty;
 
+import java.util.Locale;
+
 final public class CreativeInventoryManager {
     final private static CreativeInventoryManager INSTANCE = new CreativeInventoryManager();
+    final private static String SMITHING_TEMPLATES_GROUP = "itemGroup.name.smithing_templates";
 
     private CreativeInventoryManager() {
     }
@@ -91,27 +100,117 @@ final public class CreativeInventoryManager {
     }
 
     private CreativePlacement detectPlacement(@NonNull Item item) {
-        if (!item.isArmor()) {
-            return CreativePlacement.DEFAULT;
+        String itemPath = this.identifierPath(item.getId());
+
+        if (item instanceof SpawnEggPickable
+            || item.hasTag(ItemTags.SPAWN_EGG)
+            || itemPath.endsWith("_spawn_egg")) {
+            return this.placement(CreativeCategory.NATURE, CreativeGroup.MOB_EGGS);
         }
 
-        CreativeGroup group = switch (item.getWearableType()) {
-            case HEAD -> CreativeGroup.HELMET;
-            case CHEST -> CreativeGroup.CHESTPLATE;
-            case LEGS -> CreativeGroup.LEGGINGS;
-            case FEET -> CreativeGroup.BOOTS;
-            case NONE -> CreativeGroup.NONE;
-        };
+        if (item.isArmor()) {
+            CreativeGroup armorGroup = switch (item.getWearableType()) {
+                case HEAD -> CreativeGroup.HELMET;
+                case CHEST -> CreativeGroup.CHESTPLATE;
+                case LEGS -> CreativeGroup.LEGGINGS;
+                case FEET -> CreativeGroup.BOOTS;
+                case NONE -> CreativeGroup.NONE;
+            };
 
-        if (group == CreativeGroup.NONE) {
-            return CreativePlacement.DEFAULT;
+            if (armorGroup != CreativeGroup.NONE) {
+                return this.placement(CreativeCategory.EQUIPMENT, armorGroup);
+            }
         }
 
+        CreativeGroup toolGroup = this.detectToolGroup(item);
+        if (toolGroup != CreativeGroup.NONE) {
+            return this.placement(CreativeCategory.EQUIPMENT, toolGroup);
+        }
+        if (this.isUngroupedEquipment(item)) {
+            return new CreativePlacement(CreativeCategory.EQUIPMENT, "", false);
+        }
+
+        if (itemPath.endsWith("_smithing_template")) {
+            return new CreativePlacement(
+                CreativeCategory.ITEMS,
+                SMITHING_TEMPLATES_GROUP,
+                false
+            );
+        }
+
+        Block block = item.getBlock();
+        if (block instanceof BlockOre || itemPath.endsWith("_ore")) {
+            return this.placement(CreativeCategory.NATURE, CreativeGroup.ORE);
+        }
+        if (block instanceof BlockSapling || itemPath.endsWith("_sapling")) {
+            return this.placement(CreativeCategory.NATURE, CreativeGroup.SAPLING);
+        }
+        if (this.isSeed(item, itemPath)) {
+            return this.placement(CreativeCategory.NATURE, CreativeGroup.SEED);
+        }
+        if (block instanceof BlockCrops
+            || itemPath.endsWith("_crop")
+            || itemPath.endsWith("_crops")) {
+            return this.placement(CreativeCategory.NATURE, CreativeGroup.CROP);
+        }
+
+        return CreativePlacement.DEFAULT;
+    }
+
+    private @NonNull CreativeGroup detectToolGroup(@NonNull Item item) {
+        if (item.isSword()) {
+            return CreativeGroup.SWORD;
+        }
+        if (item.isPickaxe()) {
+            return CreativeGroup.PICKAXE;
+        }
+        if (item.isAxe()) {
+            return CreativeGroup.AXE;
+        }
+        if (item.isShovel()) {
+            return CreativeGroup.SHOVEL;
+        }
+        if (item.isHoe()) {
+            return CreativeGroup.HOE;
+        }
+
+        return CreativeGroup.NONE;
+    }
+
+    private boolean isUngroupedEquipment(@NonNull Item item) {
+        return item.isTool()
+            || item.isShears()
+            || item.isBow()
+            || item.isCrossbow()
+            || item.isSpear()
+            || item.isTrident()
+            || item.isMace()
+            || item.isShield();
+    }
+
+    private boolean isSeed(@NonNull Item item, @NonNull String itemPath) {
+        String className = item.getClass().getSimpleName().toLowerCase(Locale.ROOT);
+        return itemPath.endsWith("_seed")
+            || itemPath.endsWith("_seeds")
+            || className.endsWith("seed")
+            || className.endsWith("seeds");
+    }
+
+    private @NonNull CreativePlacement placement(
+        @NonNull CreativeCategory category,
+        @NonNull CreativeGroup group
+    ) {
         return new CreativePlacement(
-            CreativeCategory.EQUIPMENT,
+            category,
             this.groupName(group),
             false
         );
+    }
+
+    private @NonNull String identifierPath(@NonNull String identifier) {
+        int separator = identifier.indexOf(':');
+        String path = separator < 0 ? identifier : identifier.substring(separator + 1);
+        return path.toLowerCase(Locale.ROOT);
     }
 
     private int resolveGroupIndex(

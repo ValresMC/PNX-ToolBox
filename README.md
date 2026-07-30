@@ -7,4 +7,10 @@ automatic permissions, Bedrock overloads/autocompletion and live command refresh
 Rule and argument errors are configurable through `command-messages-config.yml` and
 served from an immutable runtime cache that can be refreshed without a restart.
 
-See [the command guide](wiki/commands.md) for a complete example and the available API.
+Custom items registered through `CustomItemRegistry` are automatically added to
+the creative inventory. The toolbox detects armor, tools, ores, smithing
+templates, seeds, saplings, crops and spawn eggs, then places them in the matching
+Bedrock category and group. `@CreativeInventoryInfo` can override the detected
+placement or hide an item.
+
+See [the wiki](wiki/Home.md) for guides and complete examples.
