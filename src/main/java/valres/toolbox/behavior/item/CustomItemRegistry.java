@@ -138,7 +138,10 @@ final public class CustomItemRegistry {
         NbtMap componentData = builder.toNBT().toNetwork();
 
         try {
-            Registries.ITEM.register(identifier, item.getClass());
+            PNXItemRegistryAccessor.register(
+                identifier,
+                item.getClass().asSubclass(Item.class)
+            );
 
             Registries.ITEM_RUNTIMEID.registerCustomRuntimeItem(
                 new ItemRuntimeIdRegistry.RuntimeEntry(identifier, runtimeId, builder.getFormat() == ItemVersion.DATA_DRIVEN)
