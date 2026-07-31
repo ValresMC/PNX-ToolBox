@@ -6,22 +6,22 @@ import org.powernukkitx.nbt.tag.Tag;
 import valres.toolbox.behavior.item.ItemPropertyNames;
 import valres.toolbox.behavior.item.components.ComponentNbtHelper;
 
-final public class BlockProperty extends DataDrivenItemProperty {
-    final private String blockName;
+public final class BlockProperty extends DataDrivenItemProperty {
+	private final String blockName;
 
-    public BlockProperty(@NonNull String blockName) {
-        this.blockName = blockName;
-    }
+	public BlockProperty(@NonNull String blockName) {
+		this.blockName = blockName;
+	}
 
-    public static @NonNull BlockProperty from(@NonNull Block block) {
-        return new BlockProperty(block.getId());
-    }
+	public static @NonNull BlockProperty from(@NonNull Block block) {
+		return new BlockProperty(block.getId());
+	}
 
-    @Override public @NonNull String getIdentifier() {
-        return ItemPropertyNames.BLOCK;
-    }
+	@Override public @NonNull String getIdentifier() {
+		return ItemPropertyNames.BLOCK;
+	}
 
-    @Override public @NonNull Tag toNBT() {
-        return ComponentNbtHelper.tag(this.blockName);
-    }
+	@Override public @NonNull Tag toNBT() {
+		return ComponentNbtHelper.tag(this.blockName);
+	}
 }

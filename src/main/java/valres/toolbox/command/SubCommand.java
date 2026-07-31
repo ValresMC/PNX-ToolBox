@@ -1,5 +1,8 @@
 package valres.toolbox.command;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import org.jspecify.annotations.NonNull;
 import valres.toolbox.command.annotation.SubCommandDefinition;
 import valres.toolbox.command.argument.Argument;
@@ -7,211 +10,187 @@ import valres.toolbox.command.exception.CommandConfigurationException;
 import valres.toolbox.command.rules.PermissionRule;
 import valres.toolbox.command.rules.Rule;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+public abstract class SubCommand {
+	private final CommandNodeData data;
 
-abstract public class SubCommand {
-    final private CommandNodeData data;
+	private Command command;
+	private String permission;
+	private boolean initializing;
+	private boolean initialized;
 
-    private Command command;
-    private String permission;
-    private boolean initializing;
-    private boolean initialized;
+	protected SubCommand() {
+		SubCommandDefinition info = this.getClass().getAnnotation(SubCommandDefinition.class);
+		if (info == null) {
+			throw new CommandConfigurationException("Sub-command " + this.getClass().getName() + " needs @SubCommandDefinition or an explicit constructor");
+		}
 
-    protected SubCommand() {
-        SubCommandDefinition info = this.getClass().getAnnotation(
-            SubCommandDefinition.class
-        );
-        if (info == null) {
-            throw new CommandConfigurationException(
-                "Sub-command " + this.getClass().getName()
-                    + " needs @SubCommandDefinition or an explicit constructor"
-            );
-        }
+		this.data = new CommandNodeData(info.name(), info.description(), info.aliases());
+	}
 
-        this.data = new CommandNodeData(info.name(), info.description(), info.aliases());
-    }
+	protected SubCommand(String name) {
+		this(name, "");
+	}
 
-    protected SubCommand(String name) {
-        this(name, "");
-    }
+	protected SubCommand(String name, String description, String... aliases) {
+		this.data = new CommandNodeData(name, description, aliases);
+	}
 
-    protected SubCommand(String name, String description, String... aliases) {
-        this.data = new CommandNodeData(name, description, aliases);
-    }
+	public final String getName() {
+		return this.data.getName();
+	}
 
-    final public String getName() {
-        return this.data.getName();
-    }
+	public final String getDescription() {
+		return this.data.getDescription();
+	}
 
-    final public String getDescription() {
-        return this.data.getDescription();
-    }
+	public final List<String> getAliases() {
+		return this.data.getAliases();
+	}
 
-    final public List<String> getAliases() {
-        return this.data.getAliases();
-    }
+	public final boolean matches(String label) {
+		return this.getName().equalsIgnoreCase(label) || this.getAliases().stream().anyMatch(alias -> alias.equalsIgnoreCase(label));
+	}
 
-    final public boolean matches(String label) {
-        return this.getName().equalsIgnoreCase(label)
-            || this.getAliases().stream().anyMatch(alias -> alias.equalsIgnoreCase(label));
-    }
+	public final void addArgument(Argument<?> argument) {
+		this.data.addArgument(argument);
+		this.refreshRoot();
+	}
 
-    final public void addArgument(Argument<?> argument) {
-        this.data.addArgument(argument);
-        this.refreshRoot();
+	public final Argument<?> getArgument(String name) {
+		return this.data.getArgument(name);
+	}
 
-    }
+	public final List<Argument<?>> getArguments() {
+		return this.data.getArguments();
+	}
 
-    final public Argument<?> getArgument(String name) {
-        return this.data.getArgument(name);
-    }
+	public final SubCommand addRule(Rule rule) {
+		this.data.addRule(rule);
 
-    final public List<Argument<?>> getArguments() {
-        return this.data.getArguments();
-    }
+		return this;
+	}
 
-    final public SubCommand addRule(Rule rule) {
-        this.data.addRule(rule);
+	public final List<Rule> getRules() {
+		return this.data.getRules();
+	}
 
-        return this;
-    }
+	public final SubCommand addSubCommand(SubCommand subCommand) {
+		this.data.addSubCommand(subCommand);
+		if (this.command != null) {
+			List<String> path = new ArrayList<>(this.getPath());
+			path.add(subCommand.getName());
+			subCommand.bindTo(this.command, path);
+		}
+		this.refreshRoot();
 
-    final public List<Rule> getRules() {
-        return this.data.getRules();
-    }
+		return this;
+	}
 
-    final public SubCommand addSubCommand(SubCommand subCommand) {
-        this.data.addSubCommand(subCommand);
-        if (this.command != null) {
-            List<String> path = new ArrayList<>(this.getPath());
-            path.add(subCommand.getName());
-            subCommand.bindTo(this.command, path);
-        }
-        this.refreshRoot();
+	public final SubCommand getSubCommand(String label) {
+		return this.data.findSubCommand(label);
+	}
 
-        return this;
-    }
+	public final List<SubCommand> getSubCommands() {
+		return this.data.getSubCommands();
+	}
 
-    final public SubCommand getSubCommand(String label) {
-        return this.data.findSubCommand(label);
-    }
+	public final Command getCommand() {
+		return this.command;
+	}
 
-    final public List<SubCommand> getSubCommands() {
-        return this.data.getSubCommands();
-    }
+	public final String getPermission() {
+		return this.permission;
+	}
 
-    final public Command getCommand() {
-        return this.command;
-    }
+	public final String getUsage(String parentLabel) {
+		return this.data.getUsage(parentLabel + " " + this.getName());
+	}
 
-    final public String getPermission() {
-        return this.permission;
-    }
+	public final List<String> getUsageLines(String parentLabel) {
+		String label = parentLabel + " " + this.getName();
+		List<String> lines = new ArrayList<>();
+		lines.add(this.data.getUsage(label));
+		for (SubCommand subCommand : this.getSubCommands()) {
+			lines.addAll(subCommand.getUsageLines(label));
+		}
 
-    final public String getUsage(String parentLabel) {
-        return this.data.getUsage(parentLabel + " " + this.getName());
-    }
+		return List.copyOf(lines);
+	}
 
-    final public List<String> getUsageLines(String parentLabel) {
-        String label = parentLabel + " " + this.getName();
-        List<String> lines = new ArrayList<>();
-        lines.add(this.data.getUsage(label));
-        for (SubCommand subCommand : this.getSubCommands()) {
-            lines.addAll(subCommand.getUsageLines(label));
-        }
+	protected void configure() {
+	}
 
-        return List.copyOf(lines);
-    }
+	protected abstract Object onRun(CommandContext context);
 
-    protected void configure() {
-    }
+	final Object run(CommandContext context) {
+		return this.onRun(context);
+	}
 
-    abstract protected Object onRun(CommandContext context);
+	final CommandNodeData getData() {
+		return this.data;
+	}
 
-    final Object run(CommandContext context) {
-        return this.onRun(context);
-    }
+	final void initialize() {
+		if (this.initialized) {
+			return;
+		}
+		if (this.initializing) {
+			throw new CommandConfigurationException("Circular initialization detected for sub-command '" + this.getName() + "'");
+		}
 
-    final CommandNodeData getData() {
-        return this.data;
-    }
+		this.initializing = true;
+		try {
+			this.data.loadAnnotatedArguments(this.getClass());
+			this.configure();
+			this.getSubCommands().forEach(SubCommand::initialize);
+			this.initialized = true;
+		} finally {
+			this.initializing = false;
+		}
+	}
 
-    final void initialize() {
-        if (this.initialized) {
-            return;
-        }
-        if (this.initializing) {
-            throw new CommandConfigurationException(
-                "Circular initialization detected for sub-command '" + this.getName() + "'"
-            );
-        }
+	final void bindTo(@NonNull Command command, List<String> path) {
+		this.initialize();
 
-        this.initializing = true;
-        try {
-            this.data.loadAnnotatedArguments(this.getClass());
-            this.configure();
-            this.getSubCommands().forEach(SubCommand::initialize);
-            this.initialized = true;
-        } finally {
-            this.initializing = false;
-        }
-    }
+		if (this.command != null && this.command != command) {
+			throw new CommandConfigurationException("Sub-command '" + this.getName() + "' is already bound to another root command");
+		}
+		this.command = command;
 
-    final void bindTo(@NonNull Command command, List<String> path) {
-        this.initialize();
+		String generatedPermission = command.getCommandPermission() + "." + String.join(".", path);
 
-        if (this.command != null && this.command != command) {
-            throw new CommandConfigurationException(
-                "Sub-command '" + this.getName() + "' is already bound to another root command"
-            );
-        }
-        this.command = command;
+		if (!Objects.equals(this.permission, generatedPermission)) {
+			this.permission = generatedPermission;
+			command.registerPermission(generatedPermission, this.getDescription(), org.powernukkitx.permission.Permission.DEFAULT_OP);
+			boolean hasRule = this.getRules().stream().filter(PermissionRule.class::isInstance).map(PermissionRule.class::cast).anyMatch(rule -> rule.getPermission().equals(generatedPermission));
+			if (!hasRule) {
+				this.data.addRule(new PermissionRule(generatedPermission));
+			}
+		}
 
-        String generatedPermission = command.getCommandPermission() + "." + String.join(".", path);
+		for (SubCommand subCommand : this.getSubCommands()) {
+			List<String> childPath = new ArrayList<>(path);
+			childPath.add(subCommand.getName());
+			subCommand.bindTo(command, childPath);
+		}
+	}
 
-        if (!Objects.equals(this.permission, generatedPermission)) {
-            this.permission = generatedPermission;
-            command.registerPermission(
-                generatedPermission,
-                this.getDescription(),
-                org.powernukkitx.permission.Permission.DEFAULT_OP
-            );
-            boolean hasRule = this.getRules().stream()
-                .filter(PermissionRule.class::isInstance)
-                .map(PermissionRule.class::cast)
-                .anyMatch(rule -> rule.getPermission().equals(generatedPermission));
-            if (!hasRule) {
-                this.data.addRule(new PermissionRule(generatedPermission));
-            }
-        }
+	private List<String> getPath() {
+		if (this.command == null) {
+			return List.of(this.getName());
+		}
 
-        for (SubCommand subCommand : this.getSubCommands()) {
-            List<String> childPath = new ArrayList<>(path);
-            childPath.add(subCommand.getName());
-            subCommand.bindTo(command, childPath);
-        }
-    }
+		List<String> path = this.command.findPath(this);
+		if (path == null) {
+			throw new CommandConfigurationException("Unable to resolve path for sub-command '" + this.getName() + "'");
+		}
 
-    private List<String> getPath() {
-        if (this.command == null) {
-            return List.of(this.getName());
-        }
+		return path;
+	}
 
-        List<String> path = this.command.findPath(this);
-        if (path == null) {
-            throw new CommandConfigurationException(
-                "Unable to resolve path for sub-command '" + this.getName() + "'"
-            );
-        }
-
-        return path;
-    }
-
-    private void refreshRoot() {
-        if (this.command != null) {
-            this.command.refreshDefinition();
-        }
-    }
+	private void refreshRoot() {
+		if (this.command != null) {
+			this.command.refreshDefinition();
+		}
+	}
 }

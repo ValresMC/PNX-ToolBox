@@ -1,5 +1,6 @@
 package valres.toolbox.behavior.item;
 
+import java.util.List;
 import org.jspecify.annotations.NonNull;
 import org.powernukkitx.block.Block;
 import org.powernukkitx.item.Item;
@@ -13,8 +14,8 @@ import valres.toolbox.behavior.item.builder.DataDrivenItemBuilder;
 import valres.toolbox.behavior.item.builder.ItemBuilder;
 import valres.toolbox.behavior.item.builder.LegacyItemBuilder;
 import valres.toolbox.behavior.item.components.BlockPlacerItemComponent;
-import valres.toolbox.behavior.item.components.DisplayNameComponent;
 import valres.toolbox.behavior.item.components.DiggerComponent;
+import valres.toolbox.behavior.item.components.DisplayNameComponent;
 import valres.toolbox.behavior.item.components.DurabilityComponent;
 import valres.toolbox.behavior.item.components.DyeableComponent;
 import valres.toolbox.behavior.item.components.EnchantableComponent;
@@ -27,7 +28,6 @@ import valres.toolbox.behavior.item.components.StackByDataComponent;
 import valres.toolbox.behavior.item.components.WearableItemComponent;
 import valres.toolbox.behavior.item.components.type.BlockDescriptor;
 import valres.toolbox.behavior.item.components.type.EnchantSlot;
-import valres.toolbox.behavior.item.tool.ToolTierProvider;
 import valres.toolbox.behavior.item.properties.CanDestroyInCreativeProperty;
 import valres.toolbox.behavior.item.properties.DamageProperty;
 import valres.toolbox.behavior.item.properties.HandEquippedProperty;
@@ -39,284 +39,239 @@ import valres.toolbox.behavior.item.properties.ShouldDespawnProperty;
 import valres.toolbox.behavior.item.properties.StackedByDataProperty;
 import valres.toolbox.behavior.item.properties.UseAnimationProperty;
 import valres.toolbox.behavior.item.properties.UseDurationProperty;
+import valres.toolbox.behavior.item.tool.ToolTierProvider;
 
-import java.util.List;
+public final class ItemDataResolver {
+	private ItemDataResolver() {
+	}
 
-final public class ItemDataResolver {
-    private ItemDataResolver() {
-    }
+	public static void applyDefault(@NonNull ItemBuilder<?> builder) {
+		if (builder instanceof LegacyItemBuilder legacyBuilder) {
+			applyLegacyComponents(legacyBuilder);
+			return;
+		}
 
-    public static void applyDefault(@NonNull ItemBuilder<?> builder) {
-        if (builder instanceof LegacyItemBuilder legacyBuilder) {
-            applyLegacyComponents(legacyBuilder);
-            return;
-        }
+		if (builder instanceof DataDrivenItemBuilder dataDrivenBuilder) {
+			applyDataDrivenProperties(dataDrivenBuilder);
+			applyDataDrivenComponents(dataDrivenBuilder);
+		}
+	}
 
-        if (builder instanceof DataDrivenItemBuilder dataDrivenBuilder) {
-            applyDataDrivenProperties(dataDrivenBuilder);
-            applyDataDrivenComponents(dataDrivenBuilder);
-        }
-    }
+	private static void applyLegacyComponents(@NonNull LegacyItemBuilder builder) {
+		Item item = builder.getItem();
 
-    private static void applyLegacyComponents(@NonNull LegacyItemBuilder builder) {
-        Item item = builder.getItem();
+		builder.addComponent(new MaxStackSizeComponent(item.getMaxStackSize()));
+		builder.addComponent(new StackByDataComponent(false));
+		builder.addComponent(new HandEquippedComponent(item.isTool()));
+	}
 
-        builder.addComponent(new MaxStackSizeComponent(item.getMaxStackSize()));
-        builder.addComponent(new StackByDataComponent(false));
-        builder.addComponent(new HandEquippedComponent(item.isTool()));
-    }
+	private static void applyDataDrivenProperties(@NonNull DataDrivenItemBuilder builder) {
+		Item item = builder.getItem();
 
-    private static void applyDataDrivenProperties(
-        @NonNull DataDrivenItemBuilder builder
-    ) {
-        Item item = builder.getItem();
+		builder.addProperty(new IconProperty(runtimePath(builder.getIdentifier())));
+		builder.addProperty(new StackedByDataProperty(false));
+		builder.addProperty(new ShouldDespawnProperty(false));
+		builder.addProperty(new MaxStackSizeProperty(item.getMaxStackSize()));
+		builder.addProperty(new HandEquippedProperty(item.isTool()));
+		builder.addProperty(new CanDestroyInCreativeProperty(!item.isSword()));
+		builder.addProperty(new LiquidClippedProperty(item instanceof ItemBucket));
 
-        builder.addProperty(new IconProperty(runtimePath(builder.getIdentifier())));
-        builder.addProperty(new StackedByDataProperty(false));
-        builder.addProperty(new ShouldDespawnProperty(false));
-        builder.addProperty(new MaxStackSizeProperty(item.getMaxStackSize()));
-        builder.addProperty(new HandEquippedProperty(item.isTool()));
-        builder.addProperty(new CanDestroyInCreativeProperty(!item.isSword()));
-        builder.addProperty(new LiquidClippedProperty(item instanceof ItemBucket));
+		Integer miningSpeed = detectMiningSpeed(item);
+		if (miningSpeed != null) {
+			builder.addProperty(new MiningSpeedProperty(miningSpeed));
+		}
 
-        Integer miningSpeed = detectMiningSpeed(item);
-        if (miningSpeed != null) {
-            builder.addProperty(new MiningSpeedProperty(miningSpeed));
-        }
+		int attackDamage = item.getAttackDamage();
+		if (attackDamage > 1) {
+			builder.addProperty(new DamageProperty(attackDamage - 1));
+		}
 
-        int attackDamage = item.getAttackDamage();
-        if (attackDamage > 1) {
-            builder.addProperty(new DamageProperty(attackDamage - 1));
-        }
+		if (item.isConsumable()) {
+			builder.addProperty(new UseDurationProperty(20));
+		}
 
-        if (item.isConsumable()) {
-            builder.addProperty(new UseDurationProperty(20));
-        }
+		builder.addProperty(new UseAnimationProperty(detectUseAnimation(item)));
+	}
 
-        builder.addProperty(new UseAnimationProperty(detectUseAnimation(item)));
-    }
+	private static void applyDataDrivenComponents(@NonNull DataDrivenItemBuilder builder) {
+		Item item = builder.getItem();
 
-    private static void applyDataDrivenComponents(
-        @NonNull DataDrivenItemBuilder builder
-    ) {
-        Item item = builder.getItem();
+		builder.addComponent(new DisplayNameComponent("item." + builder.getIdentifier() + ".name"));
 
-        builder.addComponent(new DisplayNameComponent(
-            "item." + builder.getIdentifier() + ".name"
-        ));
+		Integer miningSpeed = detectMiningSpeed(item);
+		DiggerComponent digger = createDefaultDigger(item, miningSpeed);
+		if (digger != null) {
+			builder.addComponent(digger);
+		}
 
-        Integer miningSpeed = detectMiningSpeed(item);
-        DiggerComponent digger = createDefaultDigger(item, miningSpeed);
-        if (digger != null) {
-            builder.addComponent(digger);
-        }
+		int enchantAbility = item.getEnchantAbility();
+		if (enchantAbility > 0) {
+			builder.addComponent(new EnchantableComponent(detectEnchantSlot(item), enchantAbility));
+		}
 
-        int enchantAbility = item.getEnchantAbility();
-        if (enchantAbility > 0) {
-            builder.addComponent(new EnchantableComponent(
-                detectEnchantSlot(item),
-                enchantAbility
-            ));
-        }
+		builder.addComponent(new FireResistantComponent(item.isLavaResistant()));
 
-        builder.addComponent(new FireResistantComponent(item.isLavaResistant()));
+		Integer fuelTime = item.getFuelTime();
+		if (fuelTime != null && fuelTime > 0) {
+			builder.addComponent(new FuelComponent(fuelTime / 20f));
+		}
 
-        Integer fuelTime = item.getFuelTime();
-        if (fuelTime != null && fuelTime > 0) {
-            builder.addComponent(new FuelComponent(fuelTime / 20f));
-        }
+		int maxDurability = item.getMaxDurability();
+		if (item.canTakeDamage() && !item.isUnbreakable() && maxDurability > 0) {
+			builder.addComponent(new DurabilityComponent(maxDurability, item.getDamageChanceMin(), item.getDamageChanceMax()));
+		}
 
-        int maxDurability = item.getMaxDurability();
-        if (item.canTakeDamage() && !item.isUnbreakable() && maxDurability > 0) {
-            builder.addComponent(new DurabilityComponent(
-                maxDurability,
-                item.getDamageChanceMin(),
-                item.getDamageChanceMax()
-            ));
-        }
+		if (item.isArmor()) {
+			builder.addComponent(new WearableItemComponent(detectArmorSlot(item.getWearableType()), item.getArmorPoints(), null));
+		}
 
-        if (item.isArmor()) {
-            builder.addComponent(new WearableItemComponent(
-                detectArmorSlot(item.getWearableType()),
-                item.getArmorPoints(),
-                null
-            ));
-        }
+		Block block = item.getBlock();
+		if (!block.isAir()) {
+			builder.addComponent(BlockPlacerItemComponent.from(block));
+		}
 
-        Block block = item.getBlock();
-        if (!block.isAir()) {
-            builder.addComponent(BlockPlacerItemComponent.from(block));
-        }
+		if (item instanceof ItemDye dye) {
+			builder.addComponent(new DyeableComponent(toRgbaHex(dye.getDyeColor().getColor())));
+		}
 
-        if (item instanceof ItemDye dye) {
-            builder.addComponent(new DyeableComponent(toRgbaHex(
-                dye.getDyeColor().getColor()
-            )));
-        }
+		if (item.isEdible()) {
+			int nutrition = item.getNutrition();
+			float saturationModifier = nutrition > 0 ? item.getSaturation() / (nutrition * 2f) : 0f;
 
-        if (item.isEdible()) {
-            int nutrition = item.getNutrition();
-            float saturationModifier = nutrition > 0
-                ? item.getSaturation() / (nutrition * 2f)
-                : 0f;
+			builder.addComponent(new FoodComponent(nutrition, saturationModifier, item.canAlwaysEat(), null));
+		}
+	}
 
-            builder.addComponent(new FoodComponent(
-                nutrition,
-                saturationModifier,
-                item.canAlwaysEat(),
-                null
-            ));
-        }
-    }
+	private static @NonNull String runtimePath(@NonNull String identifier) {
+		int separator = identifier.indexOf(':');
+		return separator < 0 ? identifier : identifier.substring(separator + 1);
+	}
 
-    private static @NonNull String runtimePath(@NonNull String identifier) {
-        int separator = identifier.indexOf(':');
-        return separator < 0 ? identifier : identifier.substring(separator + 1);
-    }
+	private static @NonNull String detectUseAnimation(@NonNull Item item) {
+		if (item instanceof ItemPotion) {
+			return UseAnimationProperty.DRINK;
+		}
+		if (item.isEdible()) {
+			return UseAnimationProperty.EAT;
+		}
+		if (item.isBow()) {
+			return UseAnimationProperty.BOW;
+		}
+		if (item.isCrossbow()) {
+			return UseAnimationProperty.CROSSBOW;
+		}
+		if (item.isShield()) {
+			return UseAnimationProperty.BLOCK;
+		}
+		if (item.isSpear()) {
+			return UseAnimationProperty.SPEAR;
+		}
+		return UseAnimationProperty.NONE;
+	}
 
-    private static @NonNull String detectUseAnimation(@NonNull Item item) {
-        if (item instanceof ItemPotion) {
-            return UseAnimationProperty.DRINK;
-        }
-        if (item.isEdible()) {
-            return UseAnimationProperty.EAT;
-        }
-        if (item.isBow()) {
-            return UseAnimationProperty.BOW;
-        }
-        if (item.isCrossbow()) {
-            return UseAnimationProperty.CROSSBOW;
-        }
-        if (item.isShield()) {
-            return UseAnimationProperty.BLOCK;
-        }
-        if (item.isSpear()) {
-            return UseAnimationProperty.SPEAR;
-        }
-        return UseAnimationProperty.NONE;
-    }
+	private static @NonNull EnchantSlot detectEnchantSlot(@NonNull Item item) {
+		if (item.isSword()) {
+			return EnchantSlot.SWORD;
+		}
+		if (item.isPickaxe()) {
+			return EnchantSlot.PICKAXE;
+		}
+		if (item.isAxe()) {
+			return EnchantSlot.AXE;
+		}
+		if (item.isHoe()) {
+			return EnchantSlot.HOE;
+		}
+		if (item.isShovel()) {
+			return EnchantSlot.SHOVEL;
+		}
+		if (item.isBow()) {
+			return EnchantSlot.BOW;
+		}
+		if (item.isCrossbow()) {
+			return EnchantSlot.CROSSBOW;
+		}
+		if (item.isSpear()) {
+			return EnchantSlot.SPEAR;
+		}
+		if (item.isShield()) {
+			return EnchantSlot.SHIELD;
+		}
+		if (item.isShears()) {
+			return EnchantSlot.SHEARS;
+		}
+		if (item.getId().equals(Item.FISHING_ROD)) {
+			return EnchantSlot.FISHING_ROD;
+		}
 
-    private static @NonNull EnchantSlot detectEnchantSlot(@NonNull Item item) {
-        if (item.isSword()) {
-            return EnchantSlot.SWORD;
-        }
-        if (item.isPickaxe()) {
-            return EnchantSlot.PICKAXE;
-        }
-        if (item.isAxe()) {
-            return EnchantSlot.AXE;
-        }
-        if (item.isHoe()) {
-            return EnchantSlot.HOE;
-        }
-        if (item.isShovel()) {
-            return EnchantSlot.SHOVEL;
-        }
-        if (item.isBow()) {
-            return EnchantSlot.BOW;
-        }
-        if (item.isCrossbow()) {
-            return EnchantSlot.CROSSBOW;
-        }
-        if (item.isSpear()) {
-            return EnchantSlot.SPEAR;
-        }
-        if (item.isShield()) {
-            return EnchantSlot.SHIELD;
-        }
-        if (item.isShears()) {
-            return EnchantSlot.SHEARS;
-        }
-        if (item.getId().equals(Item.FISHING_ROD)) {
-            return EnchantSlot.FISHING_ROD;
-        }
+		return switch (item.getWearableType()) {
+			case HEAD -> EnchantSlot.ARMOR_HEAD;
+			case CHEST -> EnchantSlot.ARMOR_TORSO;
+			case LEGS -> EnchantSlot.ARMOR_LEGS;
+			case FEET -> EnchantSlot.ARMOR_FEET;
+			case NONE -> EnchantSlot.ALL;
+		};
+	}
 
-        return switch (item.getWearableType()) {
-            case HEAD -> EnchantSlot.ARMOR_HEAD;
-            case CHEST -> EnchantSlot.ARMOR_TORSO;
-            case LEGS -> EnchantSlot.ARMOR_LEGS;
-            case FEET -> EnchantSlot.ARMOR_FEET;
-            case NONE -> EnchantSlot.ALL;
-        };
-    }
+	private static @NonNull String detectArmorSlot(@NonNull ItemArmorType slot) {
+		return switch (slot) {
+			case HEAD -> WearableItemComponent.ARMOR_HEAD;
+			case CHEST -> WearableItemComponent.ARMOR_CHEST;
+			case LEGS -> WearableItemComponent.ARMOR_LEGS;
+			case FEET -> WearableItemComponent.ARMOR_FEET;
+			case NONE -> "slot.armor";
+		};
+	}
 
-    private static @NonNull String detectArmorSlot(@NonNull ItemArmorType slot) {
-        return switch (slot) {
-            case HEAD -> WearableItemComponent.ARMOR_HEAD;
-            case CHEST -> WearableItemComponent.ARMOR_CHEST;
-            case LEGS -> WearableItemComponent.ARMOR_LEGS;
-            case FEET -> WearableItemComponent.ARMOR_FEET;
-            case NONE -> "slot.armor";
-        };
-    }
+	private static Integer detectMiningSpeed(@NonNull Item item) {
+		if (!item.isTool()) {
+			return null;
+		}
 
-    private static Integer detectMiningSpeed(@NonNull Item item) {
-        if (!item.isTool()) {
-            return null;
-        }
+		if (item instanceof ToolTierProvider provider) {
+			return provider.getToolTier().miningSpeed();
+		}
 
-        if (item instanceof ToolTierProvider provider) {
-            return provider.getToolTier().miningSpeed();
-        }
+		return switch (item.getTier()) {
+			case ItemTool.TIER_WOODEN -> 2;
+			case ItemTool.TIER_GOLD -> 12;
+			case ItemTool.TIER_STONE -> 4;
+			case ItemTool.TIER_COPPER -> 5;
+			case ItemTool.TIER_IRON -> 6;
+			case ItemTool.TIER_DIAMOND -> 8;
+			case ItemTool.TIER_NETHERITE -> 9;
+			default -> 1;
+		};
+	}
 
-        return switch (item.getTier()) {
-            case ItemTool.TIER_WOODEN -> 2;
-            case ItemTool.TIER_GOLD -> 12;
-            case ItemTool.TIER_STONE -> 4;
-            case ItemTool.TIER_COPPER -> 5;
-            case ItemTool.TIER_IRON -> 6;
-            case ItemTool.TIER_DIAMOND -> 8;
-            case ItemTool.TIER_NETHERITE -> 9;
-            default -> 1;
-        };
-    }
+	private static DiggerComponent createDefaultDigger(@NonNull Item item, Integer miningSpeed) {
+		if (miningSpeed == null) {
+			return null;
+		}
 
-    private static DiggerComponent createDefaultDigger(
-        @NonNull Item item,
-        Integer miningSpeed
-    ) {
-        if (miningSpeed == null) {
-            return null;
-        }
+		String tags = detectDiggerTags(item);
+		if (tags == null) {
+			return null;
+		}
 
-        String tags = detectDiggerTags(item);
-        if (tags == null) {
-            return null;
-        }
+		return new DiggerComponent(List.of(DiggerComponent.destroySpeed(BlockDescriptor.tagged(tags), miningSpeed)), true);
+	}
 
-        return new DiggerComponent(
-            List.of(DiggerComponent.destroySpeed(
-                BlockDescriptor.tagged(tags),
-                miningSpeed
-            )),
-            true
-        );
-    }
+	private static String detectDiggerTags(@NonNull Item item) {
+		if (item.isPickaxe()) {
+			return "q.any_tag('stone', 'metal', 'diamond_pick_diggable', " + "'mob_spawner', 'rail', 'slab_block', 'stair_block', " + "'smooth stone slab', 'sandstone slab', 'cobblestone slab', " + "'brick slab', 'stone bricks slab', 'quartz slab', " + "'nether brick slab')";
+		}
+		if (item.isAxe()) {
+			return "q.any_tag('wood', 'pumpkin', 'plant')";
+		}
+		if (item.isShovel()) {
+			return "q.any_tag('sand', 'dirt', 'gravel', 'grass', 'snow')";
+		}
 
-    private static String detectDiggerTags(@NonNull Item item) {
-        if (item.isPickaxe()) {
-            return "q.any_tag('stone', 'metal', 'diamond_pick_diggable', "
-                + "'mob_spawner', 'rail', 'slab_block', 'stair_block', "
-                + "'smooth stone slab', 'sandstone slab', 'cobblestone slab', "
-                + "'brick slab', 'stone bricks slab', 'quartz slab', "
-                + "'nether brick slab')";
-        }
-        if (item.isAxe()) {
-            return "q.any_tag('wood', 'pumpkin', 'plant')";
-        }
-        if (item.isShovel()) {
-            return "q.any_tag('sand', 'dirt', 'gravel', 'grass', 'snow')";
-        }
+		return null;
+	}
 
-        return null;
-    }
-
-    private static @NonNull String toRgbaHex(@NonNull BlockColor color) {
-        return "%02X%02X%02X%02X".formatted(
-            color.getRed(),
-            color.getGreen(),
-            color.getBlue(),
-            color.getAlpha()
-        );
-    }
+	private static @NonNull String toRgbaHex(@NonNull BlockColor color) {
+		return "%02X%02X%02X%02X".formatted(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
+	}
 }

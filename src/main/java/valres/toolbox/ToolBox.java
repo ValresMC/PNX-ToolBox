@@ -1,5 +1,9 @@
 package valres.toolbox;
 
+import java.time.Duration;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import org.jspecify.annotations.NonNull;
 import org.powernukkitx.plugin.PluginBase;
 import org.powernukkitx.scheduler.Task;
@@ -14,162 +18,129 @@ import valres.toolbox.rcon.RconCommandExecutor;
 import valres.toolbox.rcon.RconSettings;
 import valres.toolbox.rcon.exception.RconException;
 
-import java.time.Duration;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
+public final class ToolBox extends PluginBase {
+	private static ToolBox INSTANCE;
 
-final public class ToolBox extends PluginBase {
-    private static ToolBox INSTANCE;
+	private final Map<PluginBase, ManagersHandler> handlers = new ConcurrentHashMap<>();
 
-    final private Map<PluginBase, ManagersHandler> handlers = new ConcurrentHashMap<>();
+	private Rcon rcon;
+	private TaskHandler rconTask;
 
-    private Rcon rcon;
-    private TaskHandler rconTask;
+	public static ToolBox getInstance() {
+		if (INSTANCE == null) {
+			throw new IllegalStateException("PNX-ToolBox is not enabled.");
+		}
 
-    public static ToolBox getInstance() {
-        if (INSTANCE == null) {
-            throw new IllegalStateException(
-                "PNX-ToolBox is not enabled."
-            );
-        }
+		return INSTANCE;
+	}
 
-        return INSTANCE;
-    }
+	@Override public void onLoad() {
+		INSTANCE = this;
 
-    @Override
-    public void onLoad() {
-        INSTANCE = this;
+		this.saveResource("rcon-config.yml");
+		CommandMessages.load(this);
+	}
 
-        this.saveResource("rcon-config.yml");
-        CommandMessages.load(this);
-    }
+	@Override public void onEnable() {
+		this.getServer().getPluginManager().registerEvents(new ItemRegistryPacketListener(CustomItemRegistry.getInstance()), this);
 
-    @Override
-    public void onEnable() {
-        this.getServer().getPluginManager().registerEvents(new ItemRegistryPacketListener(CustomItemRegistry.getInstance()), this);
+		Config config = new Config(this.getDataFolder() + "/rcon-config.yml");
+		if (!config.getBoolean("enabled", false)) {
+			this.getLogger().info("RCON is disabled");
+			return;
+		}
 
-        Config config = new Config(this.getDataFolder() + "/rcon-config.yml");
-        if (!config.getBoolean("enabled", false)) {
-            this.getLogger().info("RCON is disabled");
-            return;
-        }
+		try {
+			this.startRcon(new RconSettings(config.getString("address", "127.0.0.1"), config.getInt("port", 30099), config.getString("password", ""), config.getInt("max-clients", RconSettings.DEFAULT_MAX_CLIENTS), Duration.ofMillis(config.getInt("authentication-timeout-ms", 5_000)), config.getInt("listen-backlog", RconSettings.DEFAULT_LISTEN_BACKLOG), config.getInt("max-packet-size", RconSettings.DEFAULT_MAX_PACKET_SIZE), Duration.ofMillis(config.getInt("command-timeout-ms", 10_000))));
+		} catch (RconException | ArithmeticException exception) {
+			this.getLogger().error("Unable to start RCON; check rcon-config.yml", exception);
+		}
+	}
 
-        try {
-            this.startRcon(new RconSettings(
-                config.getString("address", "127.0.0.1"),
-                config.getInt("port", 30099),
-                config.getString("password", ""),
-                config.getInt("max-clients", RconSettings.DEFAULT_MAX_CLIENTS),
-                Duration.ofMillis(config.getInt("authentication-timeout-ms", 5_000)),
-                config.getInt("listen-backlog", RconSettings.DEFAULT_LISTEN_BACKLOG),
-                config.getInt("max-packet-size", RconSettings.DEFAULT_MAX_PACKET_SIZE),
-                Duration.ofMillis(config.getInt("command-timeout-ms", 10_000))
-            ));
-        } catch (RconException | ArithmeticException exception) {
-            this.getLogger().error("Unable to start RCON; check rcon-config.yml", exception);
-        }
-    }
+	@Override public void onDisable() {
+		this.stopRcon();
 
-    @Override
-    public void onDisable() {
-        this.stopRcon();
+		this.handlers.clear();
+		CommandMessages.reset();
+		INSTANCE = null;
+	}
 
-        this.handlers.clear();
-        CommandMessages.reset();
-        INSTANCE = null;
-    }
+	public synchronized void startRcon(@NonNull RconSettings settings) {
+		this.startRcon(settings, null);
+	}
 
-    public synchronized void startRcon(@NonNull RconSettings settings) {
-        this.startRcon(settings, null);
-    }
+	public synchronized void startRcon(@NonNull RconSettings settings, RconCommandExecutor commandExecutor) {
+		Objects.requireNonNull(settings, "RCON settings cannot be null");
+		if (this.rcon != null) {
+			throw new RconException("An RCON interface is already running");
+		}
 
-    public synchronized void startRcon(
-        @NonNull RconSettings settings,
-        RconCommandExecutor commandExecutor
-    ) {
-        Objects.requireNonNull(settings, "RCON settings cannot be null");
-        if (this.rcon != null) {
-            throw new RconException(
-                "An RCON interface is already running"
-            );
-        }
+		Rcon startedRcon = new Rcon(this.getServer(), this.getLogger(), settings, commandExecutor);
+		try {
+			TaskHandler startedTask = this.getServer().getScheduler().scheduleRepeatingTask(new Task() {
+				@Override public void onRun(int currentTick) {
+					Rcon activeRcon = rcon;
+					if (activeRcon != null) {
+						activeRcon.check();
+					}
+				}
+			}, 1);
 
-        Rcon startedRcon = new Rcon(this.getServer(), this.getLogger(), settings, commandExecutor);
-        try {
-            TaskHandler startedTask = this.getServer().getScheduler().scheduleRepeatingTask(new Task() {
-                @Override
-                public void onRun(int currentTick) {
-                    Rcon activeRcon = rcon;
-                    if (activeRcon != null) {
-                        activeRcon.check();
-                    }
-                }
-            }, 1);
+			this.rcon = startedRcon;
+			this.rconTask = startedTask;
+			this.getLogger().info("RCON is listening on " + settings.getAddress() + ":" + settings.getPort());
+		} catch (RuntimeException exception) {
+			startedRcon.close();
+			throw exception;
+		}
+	}
 
-            this.rcon = startedRcon;
-            this.rconTask = startedTask;
-            this.getLogger().info("RCON is listening on " + settings.getAddress() + ":" + settings.getPort());
-        } catch (RuntimeException exception) {
-            startedRcon.close();
-            throw exception;
-        }
-    }
+	public synchronized void stopRcon() {
+		TaskHandler task = this.rconTask;
+		this.rconTask = null;
+		if (task != null && !task.isCancelled()) {
+			task.cancel();
+		}
 
-    public synchronized void stopRcon() {
-        TaskHandler task = this.rconTask;
-        this.rconTask = null;
-        if (task != null && !task.isCancelled()) {
-            task.cancel();
-        }
+		Rcon activeRcon = this.rcon;
+		this.rcon = null;
+		if (activeRcon != null) {
+			activeRcon.close();
+		}
+	}
 
-        Rcon activeRcon = this.rcon;
-        this.rcon = null;
-        if (activeRcon != null) {
-            activeRcon.close();
-        }
-    }
+	public synchronized boolean isRconRunning() {
+		return this.rcon != null && this.rcon.isRunning();
+	}
 
-    public synchronized boolean isRconRunning() {
-        return this.rcon != null && this.rcon.isRunning();
-    }
+	public void reloadCommandMessages() {
+		CommandMessages.reload();
+	}
 
-    public void reloadCommandMessages() {
-        CommandMessages.reload();
-    }
+	public @NonNull ManagersHandler createManagerHandler(@NonNull PluginBase plugin) {
+		Objects.requireNonNull(plugin, "Plugin cannot be null");
 
-    public @NonNull ManagersHandler createManagerHandler(
-        @NonNull PluginBase plugin
-    ) {
-        Objects.requireNonNull(plugin, "Plugin cannot be null");
+		ManagersHandler handler = new ManagersHandler(plugin);
+		ManagersHandler previous = this.handlers.putIfAbsent(plugin, handler);
 
-        ManagersHandler handler = new ManagersHandler(plugin);
-        ManagersHandler previous = this.handlers.putIfAbsent(plugin, handler);
+		if (previous != null) {
+			throw new IllegalStateException("A manager handler already exists for " + plugin.getName());
+		}
 
-        if (previous != null) {
-            throw new IllegalStateException(
-                "A manager handler already exists for " + plugin.getName()
-            );
-        }
+		return handler;
+	}
 
-        return handler;
-    }
+	public @NonNull ManagersHandler getManagerHandler(@NonNull PluginBase plugin) {
+		ManagersHandler handler = this.handlers.get(plugin);
 
-    public @NonNull ManagersHandler getManagerHandler(
-        @NonNull PluginBase plugin
-    ) {
-        ManagersHandler handler = this.handlers.get(plugin);
+		if (handler == null) {
+			throw new IllegalStateException("No manager handler registered for " + plugin.getName());
+		}
 
-        if (handler == null) {
-            throw new IllegalStateException(
-                "No manager handler registered for " + plugin.getName()
-            );
-        }
+		return handler;
+	}
 
-        return handler;
-    }
-
-    public void removeManagerHandler(@NonNull PluginBase plugin) {
-        this.handlers.remove(plugin);
-    }
+	public void removeManagerHandler(@NonNull PluginBase plugin) {
+		this.handlers.remove(plugin);
+	}
 }

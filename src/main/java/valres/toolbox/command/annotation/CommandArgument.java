@@ -10,12 +10,17 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Repeatable(CommandArguments.class)
 public @interface CommandArgument {
-    String NO_DEFAULT = "\u0000";
+	String NO_DEFAULT = "\u0000";
 
-    int order();
-    String name();
-    CommandArgumentType type() default CommandArgumentType.STRING;
-    boolean optional() default false;
-    String defaultValue() default NO_DEFAULT;
-    String[] values() default {};
+	int order();
+
+	String name();
+
+	CommandArgumentType type() default CommandArgumentType.STRING;
+
+	boolean optional() default false;
+
+	String defaultValue() default NO_DEFAULT;
+
+	String[] values() default {};
 }

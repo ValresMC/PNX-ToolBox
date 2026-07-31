@@ -5,22 +5,22 @@ import org.powernukkitx.nbt.tag.Tag;
 import valres.toolbox.behavior.item.ItemPropertyNames;
 import valres.toolbox.behavior.item.components.ComponentNbtHelper;
 
-final public class ShouldDespawnProperty extends DataDrivenItemProperty {
-    final private boolean value;
+public final class ShouldDespawnProperty extends DataDrivenItemProperty {
+	private final boolean value;
 
-    public ShouldDespawnProperty() {
-        this(true);
-    }
+	public ShouldDespawnProperty() {
+		this(true);
+	}
 
-    public ShouldDespawnProperty(boolean value) {
-        this.value = value;
-    }
+	public ShouldDespawnProperty(boolean value) {
+		this.value = value;
+	}
 
-    @Override public @NonNull String getIdentifier() {
-        return ItemPropertyNames.SHOULD_DESPAWN;
-    }
+	@Override public @NonNull String getIdentifier() {
+		return ItemPropertyNames.SHOULD_DESPAWN;
+	}
 
-    @Override public @NonNull Tag toNBT() {
-        return ComponentNbtHelper.tag(this.value);
-    }
+	@Override public @NonNull Tag toNBT() {
+		return ComponentNbtHelper.tag(this.value);
+	}
 }

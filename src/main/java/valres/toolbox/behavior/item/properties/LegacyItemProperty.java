@@ -1,4 +1,4 @@
 package valres.toolbox.behavior.item.properties;
 
-abstract public class LegacyItemProperty extends ItemProperty {
+public abstract class LegacyItemProperty extends ItemProperty {
 }

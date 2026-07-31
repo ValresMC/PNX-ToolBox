@@ -6,14 +6,11 @@ import org.powernukkitx.block.customblock.CustomBlock;
 import org.powernukkitx.block.customblock.CustomBlockDefinition;
 
 public interface ToolBoxBlock extends CustomBlock {
-    @Override
-    default @NonNull CustomBlockDefinition getDefinition() {
-        if (!(this instanceof Block block)) {
-            throw new IllegalStateException(
-                "ToolBoxBlock must be implemented by a Block"
-            );
-        }
+	@Override default @NonNull CustomBlockDefinition getDefinition() {
+		if (!(this instanceof Block block)) {
+			throw new IllegalStateException("ToolBoxBlock must be implemented by a Block");
+		}
 
-        return CustomBlockRegistry.getInstance().resolveDefinition(block);
-    }
+		return CustomBlockRegistry.getInstance().resolveDefinition(block);
+	}
 }

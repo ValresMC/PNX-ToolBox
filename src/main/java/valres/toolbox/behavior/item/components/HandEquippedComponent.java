@@ -4,22 +4,22 @@ import org.jspecify.annotations.NonNull;
 import org.powernukkitx.nbt.tag.Tag;
 import valres.toolbox.behavior.item.ItemComponentNames;
 
-final public class HandEquippedComponent extends LegacyItemComponent {
-    final private boolean value;
+public final class HandEquippedComponent extends LegacyItemComponent {
+	private final boolean value;
 
-    public HandEquippedComponent() {
-        this(true);
-    }
+	public HandEquippedComponent() {
+		this(true);
+	}
 
-    public HandEquippedComponent(boolean value) {
-        this.value = value;
-    }
+	public HandEquippedComponent(boolean value) {
+		this.value = value;
+	}
 
-    @Override public @NonNull String getIdentifier() {
-        return ItemComponentNames.HAND_EQUIPPED;
-    }
+	@Override public @NonNull String getIdentifier() {
+		return ItemComponentNames.HAND_EQUIPPED;
+	}
 
-    @Override public @NonNull Tag toNBT() {
-        return ComponentNbtHelper.tag(this.value);
-    }
+	@Override public @NonNull Tag toNBT() {
+		return ComponentNbtHelper.tag(this.value);
+	}
 }

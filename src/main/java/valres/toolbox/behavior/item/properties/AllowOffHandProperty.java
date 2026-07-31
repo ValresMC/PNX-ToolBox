@@ -5,22 +5,22 @@ import org.powernukkitx.nbt.tag.Tag;
 import valres.toolbox.behavior.item.ItemPropertyNames;
 import valres.toolbox.behavior.item.components.ComponentNbtHelper;
 
-final public class AllowOffHandProperty extends DataDrivenItemProperty {
-    final private boolean value;
+public final class AllowOffHandProperty extends DataDrivenItemProperty {
+	private final boolean value;
 
-    public AllowOffHandProperty() {
-        this(true);
-    }
+	public AllowOffHandProperty() {
+		this(true);
+	}
 
-    public AllowOffHandProperty(boolean value) {
-        this.value = value;
-    }
+	public AllowOffHandProperty(boolean value) {
+		this.value = value;
+	}
 
-    @Override public @NonNull String getIdentifier() {
-        return ItemPropertyNames.ALLOW_OFF_HAND;
-    }
+	@Override public @NonNull String getIdentifier() {
+		return ItemPropertyNames.ALLOW_OFF_HAND;
+	}
 
-    @Override public @NonNull Tag toNBT() {
-        return ComponentNbtHelper.tag(this.value);
-    }
+	@Override public @NonNull Tag toNBT() {
+		return ComponentNbtHelper.tag(this.value);
+	}
 }

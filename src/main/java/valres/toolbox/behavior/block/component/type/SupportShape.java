@@ -1,16 +1,15 @@
 package valres.toolbox.behavior.block.component.type;
 
 public enum SupportShape {
-    FENCE("fence"),
-    STAIR("stair");
+	FENCE("fence"), STAIR("stair");
 
-    final private String value;
+	private final String value;
 
-    SupportShape(String value) {
-        this.value = value;
-    }
+	SupportShape(String value) {
+		this.value = value;
+	}
 
-    @Override public String toString() {
-        return this.value;
-    }
+	@Override public String toString() {
+		return this.value;
+	}
 }

@@ -241,7 +241,7 @@ public final class CoinsCommand extends org.powernukkitx.command.Command {
         this.setCommandParameters(Map.of(
             "give",
             new CommandParameter[] {
-                CommandParameter.newEnum("subcommand", false, new String[] {"give"}),
+                CommandParameter.newEnum("give", false, new String[] {"give"}),
                 CommandParameter.newType("player", false, CommandParamType.STRING),
                 CommandParameter.newType("amount", false, CommandParamType.INT)
             }
@@ -325,4 +325,6 @@ public final class GiveCoinsSubCommand extends SubCommand {
 
 PNX owns construction and registration through `@CommandDefinition`. The
 toolbox owns input validation, usage messages, permission creation, nested
-routing, overload generation and player synchronization.
+routing, overload generation and player synchronization. Each subcommand name
+and alias is emitted as a literal Bedrock overload, so the client displays
+`give` instead of a generic enum placeholder.

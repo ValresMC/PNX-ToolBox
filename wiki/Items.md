@@ -336,6 +336,7 @@ Automatic detection covers:
 - Swords, pickaxes, axes, shovels, and hoes.
 - Bows, crossbows, shears, spears, tridents, maces, and shields.
 - Ores, seeds, saplings, and crops.
+- Items linked to ordinary blocks, which default to the Construction category.
 - Spawn eggs.
 - Smithing templates.
 
