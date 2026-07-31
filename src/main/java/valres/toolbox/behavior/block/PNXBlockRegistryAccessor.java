@@ -62,12 +62,11 @@ public final class PNXBlockRegistryAccessor {
 
 			FastMemberLoader loader = loaders.computeIfAbsent(blockClass.getClassLoader(), FastMemberLoader::new);
 			FastConstructor<? extends Block> constructor = FastConstructor.create(blockClass.getConstructor(BlockState.class), loader, false);
+			constructors.put(identifier, constructor);
 
 			if (registerDefaultItem) {
 				Registries.ITEM_RUNTIMEID.registerCustomRuntimeItem(new ItemRuntimeIdRegistry.RuntimeEntry(identifier, resolveItemRuntimeId(definition), false));
 			}
-
-			constructors.put(identifier, constructor);
 
 			Map<Integer, FastConstructor<? extends Block>> stateConstructors = (Map<Integer, FastConstructor<? extends Block>>) stateConstructorsField.get(null);
 			for (BlockState state : properties.getSpecialValueMap().values()) {
