@@ -7,6 +7,7 @@ import org.powernukkitx.block.BlockState;
 import org.powernukkitx.block.customblock.CustomBlock;
 import org.powernukkitx.block.customblock.CustomBlockDefinition;
 import org.powernukkitx.item.Item;
+import org.powernukkitx.level.Level;
 import org.powernukkitx.registry.RegisterException;
 import valres.toolbox.behavior.block.builder.BlockBuilder;
 import valres.toolbox.behavior.item.CustomItemRegistry;
@@ -101,6 +102,10 @@ final public class CustomBlockRegistry {
             throw new IllegalStateException(
                 "Cannot register block '" + identifier + "'", exception
             );
+        }
+
+        if (BlockDataResolver.isCrop(block)) {
+            Level.setCanRandomTick(identifier, true);
         }
 
         this.blocks.put(

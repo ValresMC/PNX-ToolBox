@@ -3,7 +3,7 @@ package valres.toolbox.behavior.block;
 import org.jspecify.annotations.NonNull;
 import org.powernukkitx.block.Block;
 import org.powernukkitx.block.BlockCrops;
-import org.powernukkitx.block.BlockNetherWartBlock;
+import org.powernukkitx.block.BlockNetherWart;
 import org.powernukkitx.item.customitem.data.CreativeCategory;
 import org.powernukkitx.item.customitem.data.CreativeGroup;
 import org.powernukkitx.utils.BlockColor;
@@ -14,6 +14,8 @@ import valres.toolbox.behavior.block.component.type.ConnectionRuleMode;
 import valres.toolbox.behavior.block.component.type.MaterialInstance;
 import valres.toolbox.behavior.block.component.type.RenderMethod;
 import valres.toolbox.behavior.block.permutation.PermutationsResolver;
+
+import java.util.Objects;
 
 final public class BlockDataResolver {
     private BlockDataResolver() {
@@ -64,7 +66,7 @@ final public class BlockDataResolver {
             toRgbHex(resolveColor(block))
         ));
 
-        if (block instanceof BlockCrops || block instanceof BlockNetherWartBlock) {
+        if (isCrop(block)) {
             builder.addComponent(new ConnectionRuleComponent(ConnectionRuleMode.NONE));
         }
 
@@ -79,6 +81,11 @@ final public class BlockDataResolver {
         }
 
         PermutationsResolver.resolveAll(builder);
+    }
+
+    static boolean isCrop(@NonNull Block block) {
+        Objects.requireNonNull(block, "Block cannot be null");
+        return block instanceof BlockCrops || block instanceof BlockNetherWart;
     }
 
     private static void applyCreativePlacement(
