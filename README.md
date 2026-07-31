@@ -13,4 +13,8 @@ templates, seeds, saplings, crops and spawn eggs, then places them in the matchi
 Bedrock category and group. `@CreativeInventoryInfo` can override the detected
 placement or hide an item.
 
+Custom blocks registered through `CustomBlockRegistry` receive generated
+Bedrock components from their PNX behavior. Crop permutations are automatic,
+and reusable permutation resolvers can be registered for other block families.
+
 See [the wiki](wiki/Home.md) for guides and complete examples.

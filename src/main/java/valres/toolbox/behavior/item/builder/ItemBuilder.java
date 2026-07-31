@@ -1,6 +1,7 @@
 package valres.toolbox.behavior.item.builder;
 
 import org.cloudburstmc.protocol.bedrock.data.inventory.ItemVersion;
+import org.jspecify.annotations.NonNull;
 import org.powernukkitx.item.Item;
 import org.powernukkitx.nbt.tag.CompoundTag;
 
@@ -18,7 +19,7 @@ abstract public class ItemBuilder<T extends ItemBuilder<T>> {
 
     private Integer runtimeId;
 
-    protected ItemBuilder(Item item) {
+    protected ItemBuilder(@NonNull Item item) {
         this.item = Objects.requireNonNull(item, "Item cannot be null");
         this.identifier = item.getId();
         if (this.identifier == null || this.identifier.isBlank()) {
@@ -31,11 +32,11 @@ abstract public class ItemBuilder<T extends ItemBuilder<T>> {
 
     abstract protected T self();
 
-    public Item getItem() {
+    public @NonNull Item getItem() {
         return this.item;
     }
 
-    public String getIdentifier() {
+    public @NonNull String getIdentifier() {
         return this.identifier;
     }
 

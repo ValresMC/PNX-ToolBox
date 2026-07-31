@@ -18,8 +18,7 @@ final public class BooleanArgument extends OptionsArgument<Boolean> {
         super(name, VALUES, true, true, defaultValue);
     }
 
-    @Override
-    public String getTypeName() {
+    @Override public String getTypeName() {
         return "bool";
     }
 

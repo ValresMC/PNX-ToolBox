@@ -16,18 +16,15 @@ final public class TextArgument extends StringArgument {
         super(name, defaultValue);
     }
 
-    @Override
-    public int getMaximumTokens() {
+    @Override public int getMaximumTokens() {
         return Integer.MAX_VALUE;
     }
 
-    @Override
-    public String getTypeName() {
+    @Override public String getTypeName() {
         return "text";
     }
 
-    @Override
-    public CommandParameter toCommandParameter() {
+    @Override public CommandParameter toCommandParameter() {
         return CommandParameter.newType(this.getName(), this.isOptional(), CommandParamType.MESSAGE);
     }
 }

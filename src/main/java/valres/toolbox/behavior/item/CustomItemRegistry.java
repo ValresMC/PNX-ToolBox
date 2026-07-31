@@ -2,6 +2,7 @@ package valres.toolbox.behavior.item;
 
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ItemVersion;
+import org.powernukkitx.block.Block;
 import org.powernukkitx.item.Item;
 import org.powernukkitx.registry.ItemRuntimeIdRegistry;
 import org.powernukkitx.registry.RegisterException;
@@ -35,15 +36,7 @@ final public class CustomItemRegistry {
     }
 
     public void register(Class<? extends Item> itemClass) {
-        Item item;
-
-        try {
-            item = itemClass.getConstructor().newInstance();
-        } catch (ReflectiveOperationException exception) {
-            throw new IllegalArgumentException(
-                "Item class must have a public no-argument constructor", exception
-            );
-        }
+        Item item = this.createItem(itemClass);
 
         String identifier = item.getId();
         this.valideIdentifier(identifier);
@@ -57,6 +50,47 @@ final public class CustomItemRegistry {
         }
     }
 
+    /**
+     * Registers the custom item form of a custom block with its own item
+     * runtime ID. The block registry must suppress its default ItemBlock.
+     */
+    public void registerBlockItem(
+        Class<? extends Item> itemClass,
+        String blockIdentifier
+    ) {
+        Item item = this.createItem(itemClass);
+        String identifier = item.getId();
+
+        this.valideIdentifier(identifier);
+        if (!identifier.equals(blockIdentifier)) {
+            throw new IllegalArgumentException(
+                "Block item identifier '" + identifier
+                    + "' must match block identifier '" + blockIdentifier + "'"
+            );
+        }
+
+        Block result = item.getBlock();
+        if (result.isAir() || !result.getId().equals(blockIdentifier)) {
+            throw new IllegalArgumentException(
+                "Block item '" + identifier
+                    + "' must return its linked block from getBlock()"
+            );
+        }
+
+        ItemVersion format = ItemVersionResolver.fromItem(item);
+        if (format != ItemVersion.LEGACY) {
+            throw new IllegalStateException(
+                "A linked block item must be a Legacy item"
+            );
+        }
+
+        this.registerLegacyItem(
+            identifier,
+            item,
+            this.allocateRuntimeId()
+        );
+    }
+
     public void registerLegacyItem(String identifier, Item item) {
         this.valideIdentifier(identifier);
 
@@ -67,8 +101,16 @@ final public class CustomItemRegistry {
             );
         }
 
-        int runtimeId = this.allocateRuntimeId();
-        LegacyItemBuilder builder = LegacyItemBuilder.create(item).setRuntimeId(runtimeId);
+        this.registerLegacyItem(identifier, item, this.allocateRuntimeId());
+    }
+
+    private void registerLegacyItem(
+        String identifier,
+        Item item,
+        int runtimeId
+    ) {
+        LegacyItemBuilder builder = LegacyItemBuilder.create(item)
+            .setRuntimeId(runtimeId);
 
         this.applyItemComponents(builder);
         this.deepRegister(builder);
@@ -138,6 +180,16 @@ final public class CustomItemRegistry {
             );
         }
 
+        String registeredIdentifier = Registries.ITEM_RUNTIMEID.getIdentifier(
+            runtimeId
+        );
+        if (registeredIdentifier != null) {
+            throw new IllegalStateException(
+                "Runtime ID '" + runtimeId + "' is already registered by '"
+                    + registeredIdentifier + "'"
+            );
+        }
+
         NbtMap componentData = builder.toNBT().toNetwork();
 
         try {
@@ -179,6 +231,17 @@ final public class CustomItemRegistry {
         if (identifier.startsWith("minecraft:")) {
             throw new IllegalArgumentException(
                 "Identifier cannot use the minecraft namespace"
+            );
+        }
+    }
+
+    private Item createItem(Class<? extends Item> itemClass) {
+        try {
+            return itemClass.getConstructor().newInstance();
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalArgumentException(
+                "Item class must have a public no-argument constructor",
+                exception
             );
         }
     }

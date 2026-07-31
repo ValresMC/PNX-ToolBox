@@ -1,5 +1,6 @@
 package valres.toolbox.rcon;
 
+import org.jspecify.annotations.NonNull;
 import org.powernukkitx.utils.Logger;
 import valres.toolbox.rcon.exception.RconProtocolException;
 import valres.toolbox.rcon.exception.RconSocketException;
@@ -51,10 +52,23 @@ public final class RconInterface implements AutoCloseable {
     private volatile ExecutorService executionExecutor;
     private boolean started;
 
-    public RconInterface(RconSettings settings, Logger logger, RconCommandExecutor commandExecutor) {
-        this.settings = Objects.requireNonNull(settings, "RCON settings cannot be null");
-        this.logger = Objects.requireNonNull(logger, "RCON logger cannot be null");
-        this.commandExecutor = Objects.requireNonNull(commandExecutor, "RCON command executor cannot be null");
+    public RconInterface(
+        @NonNull RconSettings settings,
+        @NonNull Logger logger,
+        @NonNull RconCommandExecutor commandExecutor
+    ) {
+        this.settings = Objects.requireNonNull(
+            settings,
+            "RCON settings cannot be null"
+        );
+        this.logger = Objects.requireNonNull(
+            logger,
+            "RCON logger cannot be null"
+        );
+        this.commandExecutor = Objects.requireNonNull(
+            commandExecutor,
+            "RCON command executor cannot be null"
+        );
         this.expectedPassword = settings.getPassword().getBytes(StandardCharsets.UTF_8);
         this.clientSlots = new Semaphore(settings.getMaxClients());
     }

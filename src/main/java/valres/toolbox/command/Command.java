@@ -1,5 +1,6 @@
 package valres.toolbox.command;
 
+import org.jspecify.annotations.NonNull;
 import org.powernukkitx.Player;
 import org.powernukkitx.Server;
 import org.powernukkitx.command.CommandMap;
@@ -47,10 +48,10 @@ abstract public class Command extends org.powernukkitx.command.Command implement
         this(plugin, name, "");
     }
 
-    protected Command(Plugin plugin, String name, String description, String... aliases) {
+    protected Command(@NonNull Plugin plugin, String name, String description, String... aliases) {
         super(name, description, null, aliases);
 
-        this.plugin = Objects.requireNonNull(plugin, "Owning plugin cannot be null");
+        this.plugin = plugin;
         this.data = new CommandNodeData(name, description, aliases);
     }
 
@@ -169,10 +170,17 @@ abstract public class Command extends org.powernukkitx.command.Command implement
         return List.copyOf(lines);
     }
 
-    final public CommandResult dispatch(CommandSender sender, String commandLabel, String[] arguments) {
+    final public CommandResult dispatch(
+        @NonNull CommandSender sender,
+        @NonNull String commandLabel,
+        @NonNull String[] arguments
+    ) {
         Objects.requireNonNull(sender, "Command sender cannot be null");
         Objects.requireNonNull(commandLabel, "Command label cannot be null");
-        Objects.requireNonNull(arguments, "Raw command arguments cannot be null");
+        Objects.requireNonNull(
+            arguments,
+            "Raw command arguments cannot be null"
+        );
         this.initialize();
 
         List<String> rawArguments = List.copyOf(Arrays.asList(arguments));
@@ -182,7 +190,7 @@ abstract public class Command extends org.powernukkitx.command.Command implement
         CommandNodeData current = this.data;
         SubCommand target = null;
         int cursor = 0;
-        String label = commandLabel;
+        StringBuilder label = new StringBuilder(commandLabel);
         while (cursor < rawArguments.size()) {
             SubCommand child = current.findSubCommand(rawArguments.get(cursor));
             if (child == null) {
@@ -192,11 +200,11 @@ abstract public class Command extends org.powernukkitx.command.Command implement
             target = child;
             current = child.getData();
             path.add(current);
-            label += " " + rawArguments.get(cursor);
+            label.append(" ").append(rawArguments.get(cursor));
             cursor++;
         }
 
-        String usage = current.getUsage(label);
+        String usage = current.getUsage(label.toString());
         try {
             for (CommandNodeData node : path) {
                 RuleResult ruleResult = node.testRules(sender);
@@ -218,7 +226,7 @@ abstract public class Command extends org.powernukkitx.command.Command implement
             CommandContext context = new CommandContext(
                 sender,
                 parsedArguments,
-                label,
+                    label.toString(),
                 nodeArguments,
                 this,
                 target

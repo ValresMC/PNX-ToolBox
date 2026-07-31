@@ -1,18 +1,10 @@
 package valres.toolbox.behavior.item.tool;
 
+import org.jspecify.annotations.NonNull;
 import org.powernukkitx.item.ItemTool;
 
 import java.util.Objects;
 
-/**
- * Describes the server and client properties shared by tools of one tier.
- *
- * @param level harvest level returned to PowerNukkitX
- * @param miningSpeed block-breaking speed multiplier
- * @param baseAttackDamage attack damage of a sword made from this tier
- * @param durability maximum tool durability
- * @param enchantability enchantment value used by the enchanting table
- */
 public record ToolTier(
     int level,
     int miningSpeed,
@@ -100,10 +92,7 @@ public record ToolTier(
         }
     }
 
-    /**
-     * Resolves the vanilla-style attack damage for a particular tool type.
-     */
-    public int attackDamageFor(ItemTool item) {
+    public int attackDamageFor(@NonNull ItemTool item) {
         Objects.requireNonNull(item, "item");
 
         if (item.isSword()) {

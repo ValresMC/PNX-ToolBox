@@ -1,5 +1,6 @@
 package valres.toolbox.command;
 
+import org.jspecify.annotations.NonNull;
 import org.powernukkitx.Player;
 import org.powernukkitx.command.CommandSender;
 
@@ -15,18 +16,18 @@ public record CommandContext(
     SubCommand subCommand
 ) {
     public CommandContext(
-        CommandSender sender,
-        ArgumentsList arguments,
-        String label,
-        List<String> rawArguments,
-        Command command,
+        @NonNull CommandSender sender,
+        @NonNull ArgumentsList arguments,
+        @NonNull String label,
+        @NonNull List<String> rawArguments,
+        @NonNull Command command,
         SubCommand subCommand
     ) {
-        this.sender = Objects.requireNonNull(sender, "Command sender cannot be null");
-        this.arguments = Objects.requireNonNull(arguments, "Arguments cannot be null");
-        this.label = Objects.requireNonNull(label, "Command label cannot be null");
-        this.rawArguments = List.copyOf(Objects.requireNonNull(rawArguments, "Raw arguments cannot be null"));
-        this.command = Objects.requireNonNull(command, "Command cannot be null");
+        this.sender = sender;
+        this.arguments = arguments;
+        this.label = label;
+        this.rawArguments = List.copyOf(rawArguments);
+        this.command = command;
         this.subCommand = subCommand;
     }
 

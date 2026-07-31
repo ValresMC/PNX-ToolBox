@@ -1,5 +1,6 @@
 package valres.toolbox.command.argument;
 
+import org.jspecify.annotations.NonNull;
 import org.powernukkitx.command.CommandSender;
 import org.powernukkitx.command.data.CommandParameter;
 import valres.toolbox.command.CommandMessages;
@@ -32,9 +33,7 @@ abstract public class Argument<T> {
         this(name, true, true, defaultValue);
     }
 
-    protected Argument(String name, boolean optional, boolean hasDefault, T defaultValue) {
-        Objects.requireNonNull(name, "Argument name cannot be null");
-
+    protected Argument(@NonNull String name, boolean optional, boolean hasDefault, T defaultValue) {
         String normalizedName = name.toLowerCase(Locale.ROOT);
         if (!VALID_NAME.matcher(normalizedName).matches()) {
             throw new CommandConfigurationException(
@@ -87,10 +86,7 @@ abstract public class Argument<T> {
         return this.optional ? "[" + value + "]" : "<" + value + ">";
     }
 
-    final public T parse(CommandSender sender, List<String> tokens) {
-        Objects.requireNonNull(sender, "Command sender cannot be null");
-        Objects.requireNonNull(tokens, "Argument tokens cannot be null");
-
+    final public T parse(@NonNull CommandSender sender, @NonNull List<String> tokens) {
         int tokenCount = tokens.size();
         if (tokenCount < this.getMinimumTokens() || tokenCount > this.getMaximumTokens()) {
             throw new ArgumentParseException(

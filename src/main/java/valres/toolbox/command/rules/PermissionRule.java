@@ -1,5 +1,6 @@
 package valres.toolbox.command.rules;
 
+import org.jspecify.annotations.NonNull;
 import org.powernukkitx.command.CommandSender;
 import valres.toolbox.command.CommandMessages;
 
@@ -10,22 +11,23 @@ final public class PermissionRule extends Rule {
     final private String permission;
     final private String message;
 
-    public PermissionRule(String permission) {
+    public PermissionRule(@NonNull String permission) {
         this(permission, null);
     }
 
-    public PermissionRule(String permission, String message) {
-        this.permission = Objects.requireNonNull(permission, "Permission cannot be null");
+    public PermissionRule(@NonNull String permission, String message) {
+        this.permission = Objects.requireNonNull(
+            permission,
+            "Permission cannot be null"
+        );
         this.message = message;
     }
 
-    @Override
-    public boolean canSee(CommandSender sender) {
+    @Override public boolean canSee(CommandSender sender) {
         return sender.hasPermission(this.permission);
     }
 
-    @Override
-    public void fail(CommandSender sender) {
+    @Override public void fail(CommandSender sender) {
         Map<String, Object> placeholders = Map.of("permission", this.permission);
         if (this.message == null) {
             CommandMessages.send(sender, CommandMessages.RULE_PERMISSION, placeholders);
@@ -34,7 +36,7 @@ final public class PermissionRule extends Rule {
         }
     }
 
-    public String getPermission() {
+    public @NonNull String getPermission() {
         return this.permission;
     }
 }

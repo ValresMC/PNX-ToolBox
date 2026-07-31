@@ -5,9 +5,6 @@ import org.powernukkitx.item.ItemSpear;
 
 import java.util.Objects;
 
-/**
- * Tier-aware base class that preserves PowerNukkitX spear behavior.
- */
 public abstract class TieredItemSpear extends ItemSpear
     implements ToolTierProvider {
     final private ToolTier toolTier;

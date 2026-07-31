@@ -1,5 +1,6 @@
 package valres.toolbox.command;
 
+import org.jspecify.annotations.NonNull;
 import org.powernukkitx.command.CommandSender;
 import org.powernukkitx.plugin.Plugin;
 import org.powernukkitx.utils.Config;
@@ -83,69 +84,68 @@ final public class CommandMessages {
     private CommandMessages() {
     }
 
-    final public static synchronized void load(Plugin plugin) {
-        Objects.requireNonNull(plugin, "Plugin cannot be null");
+    public static synchronized void load(@NonNull Plugin plugin) {
         plugin.saveResource(FILE_NAME);
         config = new Config(plugin.getDataFolder() + "/" + FILE_NAME);
         cache = buildCache(config);
     }
 
-    final public static synchronized void use(Config commandMessagesConfig) {
-        config = Objects.requireNonNull(commandMessagesConfig, "Command messages config cannot be null");
+    public static synchronized void use(
+        @NonNull Config commandMessagesConfig
+    ) {
+        config = Objects.requireNonNull(
+            commandMessagesConfig,
+            "Command messages config cannot be null"
+        );
         cache = buildCache(config);
     }
 
-    final public static synchronized void reload() {
+    public static synchronized void reload() {
         if (config != null) {
             config.reload();
         }
         cache = buildCache(config);
     }
 
-    final public static synchronized void reset() {
+    public static synchronized void reset() {
         config = null;
         cache = buildCache(null);
     }
 
-    final public static String get(String key) {
-        Objects.requireNonNull(key, "Message key cannot be null");
+    public static String get(@NonNull String key) {
         String message = cache.get(key);
 
         return message == null ? colorize(key) : message;
     }
 
-    final public static String format(String key, Map<String, ?> placeholders) {
+    public static String format(String key, Map<String, ?> placeholders) {
         return replacePlaceholders(get(key), placeholders);
     }
 
-    final public static String format(String key, String placeholder, Object value) {
+    public static String format(String key, String placeholder, Object value) {
         return format(key, Map.of(placeholder, value));
     }
 
-    final public static String formatRaw(String message, Map<String, ?> placeholders) {
-        Objects.requireNonNull(message, "Message cannot be null");
-
+    public static String formatRaw(@NonNull String message, Map<String, ?> placeholders) {
         return colorize(replacePlaceholders(message, placeholders));
     }
 
-    final public static String formatRaw(String message) {
+    public static String formatRaw(String message) {
         return formatRaw(message, Map.of());
     }
 
-    final public static void send(CommandSender sender, String key, Map<String, ?> placeholders) {
-        Objects.requireNonNull(sender, "Command sender cannot be null");
+    public static void send(@NonNull CommandSender sender, String key, Map<String, ?> placeholders) {
         String message = format(key, placeholders);
         if (!message.isEmpty()) {
             sender.sendMessage(message);
         }
     }
 
-    final public static void send(CommandSender sender, String key) {
+    public static void send(CommandSender sender, String key) {
         send(sender, key, Map.of());
     }
 
-    final public static void sendRaw(CommandSender sender, String message, Map<String, ?> placeholders) {
-        Objects.requireNonNull(sender, "Command sender cannot be null");
+    public static void sendRaw(@NonNull CommandSender sender, String message, Map<String, ?> placeholders) {
         String formatted = formatRaw(message, placeholders);
         if (!formatted.isEmpty()) {
             sender.sendMessage(formatted);
@@ -182,10 +182,7 @@ final public class CommandMessages {
         return Map.copyOf(messages);
     }
 
-    private static String replacePlaceholders(String message, Map<String, ?> placeholders) {
-        Objects.requireNonNull(message, "Message cannot be null");
-        Objects.requireNonNull(placeholders, "Message placeholders cannot be null");
-
+    private static String replacePlaceholders(@NonNull String message, @NonNull Map<String, ?> placeholders) {
         String formatted = message;
         for (Map.Entry<String, ?> entry : placeholders.entrySet()) {
             formatted = formatted.replace(

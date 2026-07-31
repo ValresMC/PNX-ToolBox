@@ -6,10 +6,6 @@ import org.powernukkitx.item.ItemTool;
 
 import java.util.Objects;
 
-/**
- * Base class for custom tools whose tier controls both their PNX behavior and
- * their generated Bedrock definition.
- */
 public abstract class TieredItemTool extends ItemTool implements ToolTierProvider {
     final private ToolTier toolTier;
 

@@ -1,13 +1,18 @@
 package valres.toolbox.command.rules;
 
+import org.jspecify.annotations.NonNull;
+
 import java.util.List;
 import java.util.Objects;
 
 public record RuleResult(
-    List<Rule> failed
+    @NonNull List<@NonNull Rule> failed
 ) {
-    public RuleResult(List<Rule> failed) {
-        this.failed = List.copyOf(Objects.requireNonNull(failed, "Failed rules cannot be null"));
+    public RuleResult(@NonNull List<@NonNull Rule> failed) {
+        this.failed = List.copyOf(Objects.requireNonNull(
+            failed,
+            "Failed rules cannot be null"
+        ));
     }
 
     public boolean isSuccess() {

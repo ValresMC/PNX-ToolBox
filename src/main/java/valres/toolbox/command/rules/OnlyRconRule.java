@@ -17,13 +17,11 @@ final public class OnlyRconRule extends Rule {
         this.message = message;
     }
 
-    @Override
-    public boolean canSee(CommandSender sender) {
+    @Override public boolean canSee(CommandSender sender) {
         return sender instanceof RemoteConsoleCommandSender;
     }
 
-    @Override
-    public void fail(CommandSender sender) {
+    @Override public void fail(CommandSender sender) {
         if (this.message == null) {
             CommandMessages.send(sender, CommandMessages.RULE_ONLY_RCON);
         } else {

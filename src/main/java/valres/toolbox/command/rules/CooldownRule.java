@@ -36,13 +36,11 @@ final public class CooldownRule extends Rule {
         this.message = message;
     }
 
-    @Override
-    public boolean canExecute(CommandSender sender) {
+    @Override public boolean canExecute(CommandSender sender) {
         return this.getRemaining(sender).isZero();
     }
 
-    @Override
-    public void fail(CommandSender sender) {
+    @Override public void fail(CommandSender sender) {
         long seconds = Math.max(1, (long) Math.ceil(this.getRemaining(sender).toNanos() / 1_000_000_000.0));
         Map<String, Object> placeholders = Map.of("time", seconds);
         if (this.message == null) {
@@ -52,8 +50,7 @@ final public class CooldownRule extends Rule {
         }
     }
 
-    @Override
-    public void onExecuted(CommandSender sender) {
+    @Override public void onExecuted(CommandSender sender) {
         if (this.cooldownNanos == 0) {
             return;
         }

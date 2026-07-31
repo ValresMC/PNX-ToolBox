@@ -20,8 +20,7 @@ final public class TargetArgument extends Argument<List<Entity>> {
         super(name, optional);
     }
 
-    @Override
-    protected List<Entity> parseValue(CommandSender sender, String value) {
+    @Override protected List<Entity> parseValue(CommandSender sender, String value) {
         if (!value.startsWith("@")) {
             Player player = sender.getServer().getPlayerExact(value);
             if (player == null) {
@@ -47,13 +46,11 @@ final public class TargetArgument extends Argument<List<Entity>> {
         }
     }
 
-    @Override
-    public String getTypeName() {
+    @Override public String getTypeName() {
         return "target";
     }
 
-    @Override
-    public CommandParameter toCommandParameter() {
+    @Override public CommandParameter toCommandParameter() {
         return CommandParameter.newType(this.getName(), this.isOptional(), CommandParamType.SELECTION);
     }
 }

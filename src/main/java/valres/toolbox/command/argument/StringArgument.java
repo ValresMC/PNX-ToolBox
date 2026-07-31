@@ -17,13 +17,11 @@ public class StringArgument extends Argument<String> {
         super(name, defaultValue);
     }
 
-    @Override
-    protected String parseValue(CommandSender sender, String value) {
+    @Override protected String parseValue(CommandSender sender, String value) {
         return value;
     }
 
-    @Override
-    public CommandParameter toCommandParameter() {
+    @Override public CommandParameter toCommandParameter() {
         return CommandParameter.newType(this.getName(), this.isOptional(), CommandParamType.ID);
     }
 }

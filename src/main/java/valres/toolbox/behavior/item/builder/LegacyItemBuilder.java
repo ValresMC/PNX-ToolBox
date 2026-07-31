@@ -4,13 +4,11 @@ import org.jspecify.annotations.NonNull;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ItemVersion;
 import org.powernukkitx.item.Item;
 import org.powernukkitx.nbt.tag.CompoundTag;
-import org.powernukkitx.nbt.tag.Tag;
 import valres.toolbox.behavior.item.components.LegacyItemComponent;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Objects;
 
 public class LegacyItemBuilder extends ItemBuilder<LegacyItemBuilder> {
     final private Map<String, LegacyItemComponent> components = new LinkedHashMap<>();
@@ -44,7 +42,7 @@ public class LegacyItemBuilder extends ItemBuilder<LegacyItemBuilder> {
         return Collections.unmodifiableMap(this.components);
     }
 
-    public LegacyItemBuilder addComponent(@NonNull LegacyItemComponent component) {
+    public void addComponent(@NonNull LegacyItemComponent component) {
         String identifier = component.getIdentifier();
         if (identifier.isBlank()) {
             throw new IllegalArgumentException(
@@ -53,7 +51,6 @@ public class LegacyItemBuilder extends ItemBuilder<LegacyItemBuilder> {
         }
 
         this.components.put(identifier, component);
-        return this;
     }
 
     public LegacyItemBuilder removeComponent(@NonNull String componentId) {

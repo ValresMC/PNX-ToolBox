@@ -1,5 +1,6 @@
 package valres.toolbox.command.result;
 
+import org.jspecify.annotations.NonNull;
 import org.powernukkitx.command.CommandSender;
 import valres.toolbox.command.ArgumentsList;
 import valres.toolbox.command.CommandContext;
@@ -10,18 +11,19 @@ public record CommandSuccess(
     CommandContext context,
     Object returnValue
 ) implements CommandResult {
-    public CommandSuccess(CommandContext context, Object returnValue) {
-        this.context = Objects.requireNonNull(context, "Command context cannot be null");
+    public CommandSuccess(
+        @NonNull CommandContext context,
+        Object returnValue
+    ) {
+        this.context = context;
         this.returnValue = returnValue;
     }
 
-    @Override
-    public CommandSender sender() {
+    @Override public CommandSender sender() {
         return this.context.sender();
     }
 
-    @Override
-    public boolean isSuccess() {
+    @Override public boolean isSuccess() {
         return true;
     }
 

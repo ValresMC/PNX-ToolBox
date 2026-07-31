@@ -19,8 +19,7 @@ final public class LongArgument extends Argument<Long> {
         super(name, defaultValue);
     }
 
-    @Override
-    protected Long parseValue(CommandSender sender, String value) {
+    @Override protected Long parseValue(CommandSender sender, String value) {
         try {
             if (!value.matches("[+-]?\\d+")) {
                 throw new NumberFormatException();
@@ -36,13 +35,11 @@ final public class LongArgument extends Argument<Long> {
         }
     }
 
-    @Override
-    public String getTypeName() {
+    @Override public String getTypeName() {
         return "long";
     }
 
-    @Override
-    public CommandParameter toCommandParameter() {
+    @Override public CommandParameter toCommandParameter() {
         return CommandParameter.newType(this.getName(), this.isOptional(), CommandParamType.INT);
     }
 }

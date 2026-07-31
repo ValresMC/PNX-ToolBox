@@ -1,5 +1,6 @@
 package valres.toolbox.command;
 
+import org.jspecify.annotations.NonNull;
 import org.powernukkitx.command.CommandSender;
 import valres.toolbox.command.annotation.CommandArgument;
 import valres.toolbox.command.argument.Argument;
@@ -38,12 +39,12 @@ final class CommandNodeData {
         this.updateMetadata(name, description, aliases);
     }
 
-    public void updateMetadata(String name, String description, String[] aliases) {
+    public void updateMetadata(String name, @NonNull String description, @NonNull String[] aliases) {
         this.name = normalizeName(name, "Command name");
-        this.description = Objects.requireNonNullElse(description, "");
+        this.description = description;
 
         Set<String> normalizedAliases = new LinkedHashSet<>();
-        for (String alias : Objects.requireNonNull(aliases, "Command aliases cannot be null")) {
+        for (String alias : aliases) {
             String normalizedAlias = normalizeName(alias, "Command alias");
             if (normalizedAlias.equals(this.name) || !normalizedAliases.add(normalizedAlias)) {
                 throw new CommandConfigurationException(
@@ -78,8 +79,7 @@ final class CommandNodeData {
         return List.copyOf(this.subCommands);
     }
 
-    public void addArgument(Argument<?> argument) {
-        Objects.requireNonNull(argument, "Command argument cannot be null");
+    public void addArgument(@NonNull Argument<?> argument) {
         if (this.getArgument(argument.getName()) != null) {
             throw new CommandConfigurationException(
                 "Duplicate argument '" + argument.getName() + "' on command node '" + this.name + "'"
@@ -113,13 +113,14 @@ final class CommandNodeData {
         return null;
     }
 
-    public void addRule(Rule rule) {
-        this.rules.add(Objects.requireNonNull(rule, "Command rule cannot be null"));
+    public void addRule(@NonNull Rule rule) {
+        this.rules.add(Objects.requireNonNull(
+            rule,
+            "Command rule cannot be null"
+        ));
     }
 
-    public void addSubCommand(SubCommand subCommand) {
-        Objects.requireNonNull(subCommand, "Sub-command cannot be null");
-
+    public void addSubCommand(@NonNull SubCommand subCommand) {
         List<String> labels = new ArrayList<>();
         labels.add(subCommand.getName());
         labels.addAll(subCommand.getAliases());
@@ -290,8 +291,7 @@ final class CommandNodeData {
         return missing;
     }
 
-    private static String normalizeName(String name, String field) {
-        Objects.requireNonNull(name, field + " cannot be null");
+    private static String normalizeName(@NonNull String name, String field) {
         String normalized = name.toLowerCase(Locale.ROOT);
         if (!VALID_NAME.matcher(normalized).matches()) {
             throw new CommandConfigurationException(

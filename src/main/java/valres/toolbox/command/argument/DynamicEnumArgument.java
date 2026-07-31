@@ -1,5 +1,6 @@
 package valres.toolbox.command.argument;
 
+import org.jspecify.annotations.NonNull;
 import org.powernukkitx.command.CommandSender;
 import org.powernukkitx.command.data.CommandEnum;
 import org.powernukkitx.command.data.CommandParameter;
@@ -32,19 +33,18 @@ final public class DynamicEnumArgument extends Argument<String> {
 
     private DynamicEnumArgument(
         String name,
-        Supplier<? extends Collection<String>> supplier,
+        @NonNull Supplier<? extends Collection<String>> supplier,
         boolean optional,
         boolean hasDefault,
         String defaultValue
     ) {
         super(name, optional, hasDefault, defaultValue);
 
-        this.supplier = Objects.requireNonNull(supplier, "Dynamic enum supplier cannot be null");
+        this.supplier = supplier;
         this.commandEnum = new CommandEnum(name + "DynamicOptions", this::getValues);
     }
 
-    @Override
-    protected String parseValue(CommandSender sender, String value) {
+    @Override protected String parseValue(CommandSender sender, String value) {
         String parsed = this.normalizedValues().get(value.toLowerCase(Locale.ROOT));
         if (parsed == null) {
             throw new ArgumentParseException(
@@ -63,13 +63,11 @@ final public class DynamicEnumArgument extends Argument<String> {
         return parsed;
     }
 
-    @Override
-    public String getTypeName() {
+    @Override public String getTypeName() {
         return "enum";
     }
 
-    @Override
-    public CommandParameter toCommandParameter() {
+    @Override public CommandParameter toCommandParameter() {
         return CommandParameter.newEnum(this.getName(), this.isOptional(), this.commandEnum);
     }
 
@@ -82,7 +80,10 @@ final public class DynamicEnumArgument extends Argument<String> {
     }
 
     private Map<String, String> normalizedValues() {
-        Collection<String> suppliedValues = Objects.requireNonNull(this.supplier.get(), "Dynamic enum values cannot be null");
+        @NonNull Collection<String> suppliedValues = Objects.requireNonNull(
+            this.supplier.get(),
+            "Dynamic enum values cannot be null"
+        );
         LinkedHashMap<String, String> values = new LinkedHashMap<>();
         for (String suppliedValue : suppliedValues) {
             if (suppliedValue == null) {

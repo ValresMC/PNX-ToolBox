@@ -1,5 +1,6 @@
 package valres.toolbox.command.rules;
 
+import org.jspecify.annotations.NonNull;
 import org.powernukkitx.command.CommandSender;
 import valres.toolbox.command.CommandMessages;
 
@@ -16,24 +17,25 @@ final public class PredicateRule extends Rule {
         this(sender -> true, executable, message);
     }
 
-    public PredicateRule(Predicate<CommandSender> visible, Predicate<CommandSender> executable, String message) {
-        this.visible = Objects.requireNonNull(visible, "Visibility predicate cannot be null");
-        this.executable = Objects.requireNonNull(executable, "Execution predicate cannot be null");
+    public PredicateRule(
+        @NonNull Predicate<CommandSender> visible,
+        @NonNull Predicate<CommandSender> executable,
+        String message
+    ) {
+        this.visible = visible;
+        this.executable = executable;
         this.message = message;
     }
 
-    @Override
-    public boolean canSee(CommandSender sender) {
+    @Override public boolean canSee(CommandSender sender) {
         return this.visible.test(sender);
     }
 
-    @Override
-    public boolean canExecute(CommandSender sender) {
+    @Override public boolean canExecute(CommandSender sender) {
         return this.canSee(sender) && this.executable.test(sender);
     }
 
-    @Override
-    public void fail(CommandSender sender) {
+    @Override public void fail(CommandSender sender) {
         if (this.message == null) {
             CommandMessages.send(sender, CommandMessages.RULE_PREDICATE);
         } else {

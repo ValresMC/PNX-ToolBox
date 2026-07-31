@@ -7,7 +7,16 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Objects;
 
-public record RconSettings(String address, int port, String password, int maxClients, Duration authenticationTimeout, int listenBacklog, int maxPacketSize, Duration commandTimeout) {
+public record RconSettings(
+    @NonNull String address,
+    int port,
+    @NonNull String password,
+    int maxClients,
+    @NonNull Duration authenticationTimeout,
+    int listenBacklog,
+    int maxPacketSize,
+    @NonNull Duration commandTimeout
+) {
     final public static String DEFAULT_ADDRESS = "0.0.0.0";
     final public static int DEFAULT_MAX_CLIENTS = 50;
     final public static Duration DEFAULT_AUTHENTICATION_TIMEOUT = Duration.ofSeconds(5);
@@ -55,15 +64,25 @@ public record RconSettings(String address, int port, String password, int maxCli
         requireSocketTimeout(commandTimeout, "RCON command timeout");
     }
 
-    public static RconSettings defaults(String password, int port) {
+    public static @NonNull RconSettings defaults(
+        @NonNull String password,
+        int port
+    ) {
         return defaults(password, port, DEFAULT_ADDRESS);
     }
 
-    public static RconSettings defaults(String password, int port, String address) {
+    public static @NonNull RconSettings defaults(
+        @NonNull String password,
+        int port,
+        @NonNull String address
+    ) {
         return new RconSettings(address, port, password, DEFAULT_MAX_CLIENTS, DEFAULT_AUTHENTICATION_TIMEOUT, DEFAULT_LISTEN_BACKLOG, DEFAULT_MAX_PACKET_SIZE, DEFAULT_COMMAND_TIMEOUT);
     }
 
-    private static String requireText(String value, String name) {
+    private static @NonNull String requireText(
+        @NonNull String value,
+        @NonNull String name
+    ) {
         Objects.requireNonNull(value, name + " cannot be null");
         if (value.isBlank()) {
             throw new RconException(
@@ -73,7 +92,10 @@ public record RconSettings(String address, int port, String password, int maxCli
         return value;
     }
 
-    private static void requireSocketTimeout(Duration value, String name) {
+    private static void requireSocketTimeout(
+        @NonNull Duration value,
+        @NonNull String name
+    ) {
         Objects.requireNonNull(value, name + " cannot be null");
         long milliseconds;
         try {
@@ -90,7 +112,7 @@ public record RconSettings(String address, int port, String password, int maxCli
         }
     }
 
-    public String getAddress() {
+    public @NonNull String getAddress() {
         return this.address;
     }
 
@@ -98,7 +120,7 @@ public record RconSettings(String address, int port, String password, int maxCli
         return this.port;
     }
 
-    public String getPassword() {
+    public @NonNull String getPassword() {
         return this.password;
     }
 
@@ -106,7 +128,7 @@ public record RconSettings(String address, int port, String password, int maxCli
         return this.maxClients;
     }
 
-    public Duration getAuthenticationTimeout() {
+    public @NonNull Duration getAuthenticationTimeout() {
         return this.authenticationTimeout;
     }
 
@@ -118,7 +140,7 @@ public record RconSettings(String address, int port, String password, int maxCli
         return this.maxPacketSize;
     }
 
-    public Duration getCommandTimeout() {
+    public @NonNull Duration getCommandTimeout() {
         return this.commandTimeout;
     }
 

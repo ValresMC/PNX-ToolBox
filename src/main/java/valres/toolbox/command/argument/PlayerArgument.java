@@ -32,8 +32,7 @@ final public class PlayerArgument extends Argument<Player> {
         this.exact = exact;
     }
 
-    @Override
-    protected Player parseValue(CommandSender sender, String value) {
+    @Override protected Player parseValue(CommandSender sender, String value) {
         Player player = this.exact
             ? sender.getServer().getPlayerExact(value)
             : sender.getServer().getPlayer(value);
@@ -49,13 +48,11 @@ final public class PlayerArgument extends Argument<Player> {
         return player;
     }
 
-    @Override
-    public String getTypeName() {
+    @Override public String getTypeName() {
         return "player";
     }
 
-    @Override
-    public CommandParameter toCommandParameter() {
+    @Override public CommandParameter toCommandParameter() {
         return CommandParameter.newType(this.getName(), this.isOptional(), CommandParamType.SELECTION);
     }
 }

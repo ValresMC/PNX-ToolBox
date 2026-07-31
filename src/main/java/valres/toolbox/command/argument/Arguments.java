@@ -1,5 +1,6 @@
 package valres.toolbox.command.argument;
 
+import org.jspecify.annotations.NonNull;
 import valres.toolbox.command.annotation.CommandArgument;
 import valres.toolbox.command.exception.CommandConfigurationException;
 
@@ -154,9 +155,7 @@ final public class Arguments {
         return new UuidArgument(name, true);
     }
 
-    public static Argument<?> fromAnnotation(CommandArgument definition) {
-        Objects.requireNonNull(definition, "Command argument definition cannot be null");
-
+    public static Argument<?> fromAnnotation(@NonNull CommandArgument definition) {
         String defaultValue = definition.defaultValue();
         boolean hasDefault = !CommandArgument.NO_DEFAULT.equals(defaultValue);
         if (hasDefault && !definition.optional()) {

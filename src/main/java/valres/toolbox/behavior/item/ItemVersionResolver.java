@@ -12,7 +12,7 @@ final public class ItemVersionResolver {
     private ItemVersionResolver() {
     }
 
-    public static ItemVersion fromItem(Item item) {
+    public static ItemVersion fromItem(@NonNull Item item) {
         Objects.requireNonNull(item, "item");
 
         return fromClass(item.getClass());

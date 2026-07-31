@@ -21,9 +21,12 @@ final public class ArgumentsList implements Iterable<Map.Entry<String, Object>> 
     final private CommandSender sender;
     final private Map<String, Object> values;
 
-    public ArgumentsList(CommandSender sender, Map<String, Object> values) {
-        this.sender = Objects.requireNonNull(sender, "Command sender cannot be null");
-        this.values = Collections.unmodifiableMap(new LinkedHashMap<>(Objects.requireNonNull(values, "Arguments cannot be null")));
+    public ArgumentsList(
+        @NonNull CommandSender sender,
+        @NonNull Map<String, Object> values
+    ) {
+        this.sender = sender;
+        this.values = Collections.unmodifiableMap(new LinkedHashMap<>(values));
     }
 
     public CommandSender getSender() {
@@ -126,9 +129,7 @@ final public class ArgumentsList implements Iterable<Map.Entry<String, Object>> 
         return this.values;
     }
 
-    @Override
-    @NonNull
-    public Iterator<Map.Entry<String, Object>> iterator() {
+    @Override @NonNull public Iterator<Map.Entry<String, Object>> iterator() {
         return this.values.entrySet().iterator();
     }
 }

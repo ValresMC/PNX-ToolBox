@@ -17,8 +17,7 @@ final public class UuidArgument extends Argument<UUID> {
         super(name, optional);
     }
 
-    @Override
-    protected UUID parseValue(CommandSender sender, String value) {
+    @Override protected UUID parseValue(CommandSender sender, String value) {
         try {
             return UUID.fromString(value);
         } catch (IllegalArgumentException exception) {
@@ -31,13 +30,11 @@ final public class UuidArgument extends Argument<UUID> {
         }
     }
 
-    @Override
-    public String getTypeName() {
+    @Override public String getTypeName() {
         return "uuid";
     }
 
-    @Override
-    public CommandParameter toCommandParameter() {
+    @Override public CommandParameter toCommandParameter() {
         return CommandParameter.newType(this.getName(), this.isOptional(), CommandParamType.ID);
     }
 }

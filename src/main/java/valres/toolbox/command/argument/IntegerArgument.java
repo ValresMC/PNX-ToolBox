@@ -55,8 +55,7 @@ final public class IntegerArgument extends Argument<Integer> {
         this.maximum = maximum;
     }
 
-    @Override
-    protected Integer parseValue(CommandSender sender, String value) {
+    @Override protected Integer parseValue(CommandSender sender, String value) {
         final int parsed;
         try {
             if (!value.matches("[+-]?\\d+")) {
@@ -90,13 +89,11 @@ final public class IntegerArgument extends Argument<Integer> {
         return parsed;
     }
 
-    @Override
-    public String getTypeName() {
+    @Override public String getTypeName() {
         return "int";
     }
 
-    @Override
-    public CommandParameter toCommandParameter() {
+    @Override public CommandParameter toCommandParameter() {
         return CommandParameter.newType(this.getName(), this.isOptional(), CommandParamType.INT);
     }
 }

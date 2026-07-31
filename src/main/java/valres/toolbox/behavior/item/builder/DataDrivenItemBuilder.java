@@ -60,7 +60,7 @@ public class DataDrivenItemBuilder extends ItemBuilder<DataDrivenItemBuilder> {
         return Collections.unmodifiableMap(this.components);
     }
 
-    public DataDrivenItemBuilder addComponent(@NonNull DataDrivenItemComponent component) {
+    public void addComponent(@NonNull DataDrivenItemComponent component) {
         String identifier = component.getIdentifier();
         if (identifier.isBlank()) {
             throw new IllegalArgumentException(
@@ -69,7 +69,6 @@ public class DataDrivenItemBuilder extends ItemBuilder<DataDrivenItemBuilder> {
         }
 
         this.components.put(identifier, component);
-        return this;
     }
 
     public DataDrivenItemBuilder removeComponent(@NonNull String componentId) {
@@ -85,7 +84,7 @@ public class DataDrivenItemBuilder extends ItemBuilder<DataDrivenItemBuilder> {
         return Collections.unmodifiableMap(this.properties);
     }
 
-    public DataDrivenItemBuilder addProperty(@NonNull DataDrivenItemProperty property) {
+    public void addProperty(@NonNull DataDrivenItemProperty property) {
         String identifier = property.getIdentifier();
         if (identifier.isBlank()) {
             throw new IllegalArgumentException(
@@ -94,7 +93,6 @@ public class DataDrivenItemBuilder extends ItemBuilder<DataDrivenItemBuilder> {
         }
 
         this.properties.put(identifier, property);
-        return this;
     }
 
     public DataDrivenItemBuilder removeProperty(@NonNull String propertyId) {

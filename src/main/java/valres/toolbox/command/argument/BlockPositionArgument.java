@@ -15,25 +15,21 @@ final public class BlockPositionArgument extends Argument<BlockVector3> {
         super(name, optional);
     }
 
-    @Override
-    public int getMinimumTokens() {
+    @Override public int getMinimumTokens() {
         return 3;
     }
 
-    @Override
-    protected BlockVector3 parseValue(CommandSender sender, String value) {
+    @Override protected BlockVector3 parseValue(CommandSender sender, String value) {
         Vector3 vector = CoordinateParser.parse(sender, this.getName(), value);
 
         return vector.asBlockVector3();
     }
 
-    @Override
-    public String getTypeName() {
+    @Override public String getTypeName() {
         return "block-position";
     }
 
-    @Override
-    public CommandParameter toCommandParameter() {
+    @Override public CommandParameter toCommandParameter() {
         return CommandParameter.newType(this.getName(), this.isOptional(), CommandParamType.POSITION);
     }
 }

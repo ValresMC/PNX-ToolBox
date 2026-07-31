@@ -1,5 +1,6 @@
 package valres.toolbox;
 
+import org.jspecify.annotations.NonNull;
 import org.powernukkitx.plugin.PluginBase;
 import org.powernukkitx.scheduler.Task;
 import org.powernukkitx.scheduler.TaskHandler;
@@ -79,11 +80,14 @@ final public class ToolBox extends PluginBase {
         INSTANCE = null;
     }
 
-    public synchronized void startRcon(RconSettings settings) {
+    public synchronized void startRcon(@NonNull RconSettings settings) {
         this.startRcon(settings, null);
     }
 
-    public synchronized void startRcon(RconSettings settings, RconCommandExecutor commandExecutor) {
+    public synchronized void startRcon(
+        @NonNull RconSettings settings,
+        RconCommandExecutor commandExecutor
+    ) {
         Objects.requireNonNull(settings, "RCON settings cannot be null");
         if (this.rcon != null) {
             throw new RconException(
@@ -134,7 +138,9 @@ final public class ToolBox extends PluginBase {
         CommandMessages.reload();
     }
 
-    public ManagersHandler createManagerHandler(PluginBase plugin) {
+    public @NonNull ManagersHandler createManagerHandler(
+        @NonNull PluginBase plugin
+    ) {
         Objects.requireNonNull(plugin, "Plugin cannot be null");
 
         ManagersHandler handler = new ManagersHandler(plugin);
@@ -149,7 +155,9 @@ final public class ToolBox extends PluginBase {
         return handler;
     }
 
-    public ManagersHandler getManagerHandler(PluginBase plugin) {
+    public @NonNull ManagersHandler getManagerHandler(
+        @NonNull PluginBase plugin
+    ) {
         ManagersHandler handler = this.handlers.get(plugin);
 
         if (handler == null) {
@@ -161,7 +169,7 @@ final public class ToolBox extends PluginBase {
         return handler;
     }
 
-    public void removeManagerHandler(PluginBase plugin) {
+    public void removeManagerHandler(@NonNull PluginBase plugin) {
         this.handlers.remove(plugin);
     }
 }

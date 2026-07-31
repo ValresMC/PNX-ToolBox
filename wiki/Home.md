@@ -14,6 +14,7 @@ PNX-ToolBox helps you:
 - Split a large plugin into managers with a predictable lifecycle.
 - Register legacy and data-driven custom items with automatic defaults.
 - Automatically place custom items in the correct creative category and group.
+- Register custom blocks with generated components and state permutations.
 - Run an optional configurable RCON server.
 
 The toolbox does not replace PowerNukkitX. It keeps the PNX types you already know—`Player`, `Item`, `PluginBase`, `CommandSender`, `Block`, and the registries—while reducing the boilerplate around them.
@@ -40,6 +41,8 @@ PNX-ToolBox targets Java 21 and the PowerNukkitX 3.0.0 plugin API.
 - [[Managers]] — organize plugin services around a predictable lifecycle.
 - [[Items]] — register custom items, add components and configure creative placement.
 
+- [[Blocks]] — register custom blocks and generate or extend permutations.
+
 ## Design philosophy
 
 The library follows three principles:
@@ -47,4 +50,3 @@ The library follows three principles:
 1. **Sensible defaults:** common data is inferred from the PNX object whenever possible.
 2. **Explicit overrides:** annotations and builders remain available when automatic behavior is not enough.
 3. **PNX compatibility:** handlers receive native PNX objects instead of toolbox-specific replacements.
-

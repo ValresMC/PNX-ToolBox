@@ -55,8 +55,7 @@ final public class FloatArgument extends Argument<Double> {
         this.maximum = maximum;
     }
 
-    @Override
-    protected Double parseValue(CommandSender sender, String value) {
+    @Override protected Double parseValue(CommandSender sender, String value) {
         final double parsed;
         try {
             parsed = Double.parseDouble(value);
@@ -87,13 +86,11 @@ final public class FloatArgument extends Argument<Double> {
         return parsed;
     }
 
-    @Override
-    public String getTypeName() {
+    @Override public String getTypeName() {
         return "float";
     }
 
-    @Override
-    public CommandParameter toCommandParameter() {
+    @Override public CommandParameter toCommandParameter() {
         return CommandParameter.newType(this.getName(), this.isOptional(), CommandParamType.FLOAT);
     }
 }

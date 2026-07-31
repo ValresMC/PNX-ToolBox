@@ -1,5 +1,6 @@
 package valres.toolbox.command;
 
+import org.jspecify.annotations.NonNull;
 import org.powernukkitx.Player;
 import org.powernukkitx.command.CommandMap;
 import org.powernukkitx.plugin.Plugin;
@@ -22,14 +23,13 @@ final public class CommandRegistry implements AutoCloseable {
         this(plugin, plugin.getName());
     }
 
-    public CommandRegistry(Plugin plugin, String fallbackPrefix) {
-        this.plugin = Objects.requireNonNull(plugin, "Plugin cannot be null");
+    public CommandRegistry(@NonNull Plugin plugin, String fallbackPrefix) {
+        this.plugin = plugin;
         this.commandMap = plugin.getServer().getCommandMap();
         this.fallbackPrefix = normalizePrefix(fallbackPrefix);
     }
 
-    public void register(Command command) {
-        Objects.requireNonNull(command, "Command cannot be null");
+    public void register(@NonNull Command command) {
         if (command.getPlugin() != this.plugin) {
             throw new CommandConfigurationException(
                 "Command '" + command.getName() + "' belongs to another plugin"
@@ -60,8 +60,7 @@ final public class CommandRegistry implements AutoCloseable {
         }
     }
 
-    public void register(Collection<? extends Command> commands) {
-        Objects.requireNonNull(commands, "Commands cannot be null");
+    public void register(@NonNull Collection<? extends Command> commands) {
         commands.forEach(this::register);
     }
 
@@ -98,8 +97,7 @@ final public class CommandRegistry implements AutoCloseable {
         this.syncAvailableCommands();
     }
 
-    @Override
-    public void close() {
+    @Override public void close() {
         this.unregisterAll();
     }
 
@@ -109,8 +107,7 @@ final public class CommandRegistry implements AutoCloseable {
         }
     }
 
-    private static String normalizePrefix(String fallbackPrefix) {
-        Objects.requireNonNull(fallbackPrefix, "Fallback prefix cannot be null");
+    private static String normalizePrefix(@NonNull String fallbackPrefix) {
         String normalized = fallbackPrefix.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9_-]", "-");
         if (normalized.isBlank()) {
             throw new CommandConfigurationException(

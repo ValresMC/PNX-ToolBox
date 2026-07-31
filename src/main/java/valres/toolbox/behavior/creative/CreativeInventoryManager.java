@@ -31,10 +31,6 @@ final public class CreativeInventoryManager {
         return INSTANCE;
     }
 
-    /**
-     * Adds an item using its {@link CreativeInventoryInfo} annotation, or an
-     * automatically detected placement when the annotation is absent.
-     */
     public void addToCreative(@NonNull Item item) {
         CreativePlacement placement = this.resolve(item);
         if (placement.hidden()) {

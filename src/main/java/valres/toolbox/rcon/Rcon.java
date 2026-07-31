@@ -1,5 +1,6 @@
 package valres.toolbox.rcon;
 
+import org.jspecify.annotations.NonNull;
 import org.powernukkitx.Server;
 import org.powernukkitx.event.server.RemoteServerCommandEvent;
 import org.powernukkitx.utils.Logger;
@@ -21,15 +22,29 @@ public final class Rcon implements AutoCloseable {
     final private ConcurrentLinkedQueue<PendingCommand> pendingCommands = new ConcurrentLinkedQueue<>();
     final private AtomicBoolean closed = new AtomicBoolean();
 
-    public Rcon(Server server, String password, String address, int port) {
+    public Rcon(
+        @NonNull Server server,
+        @NonNull String password,
+        @NonNull String address,
+        int port
+    ) {
         this(server, server.getLogger(), RconSettings.defaults(password, port, address), null);
     }
 
-    public Rcon(Server server, Logger logger, RconSettings settings) {
+    public Rcon(
+        @NonNull Server server,
+        @NonNull Logger logger,
+        @NonNull RconSettings settings
+    ) {
         this(server, logger, settings, null);
     }
 
-    public Rcon(Server server, Logger logger, RconSettings settings, RconCommandExecutor commandExecutor) {
+    public Rcon(
+        @NonNull Server server,
+        @NonNull Logger logger,
+        @NonNull RconSettings settings,
+        RconCommandExecutor commandExecutor
+    ) {
         this.server = Objects.requireNonNull(server, "Server cannot be null");
         Objects.requireNonNull(logger, "Logger cannot be null");
         this.commandExecutor = commandExecutor == null ? this::executePowerNukkitCommand : commandExecutor;

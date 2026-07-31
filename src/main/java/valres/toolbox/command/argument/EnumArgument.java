@@ -25,8 +25,7 @@ final public class EnumArgument<E extends Enum<E>> extends OptionsArgument<E> {
         this.enumType = enumType;
     }
 
-    @Override
-    public String getTypeName() {
+    @Override public String getTypeName() {
         return this.enumType.getSimpleName().toLowerCase(Locale.ROOT);
     }
 

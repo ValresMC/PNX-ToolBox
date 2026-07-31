@@ -23,8 +23,7 @@ final public class LevelArgument extends Argument<Level> {
         this.commandEnum = new CommandEnum(name + "Levels", this::getLevelNames);
     }
 
-    @Override
-    protected Level parseValue(CommandSender sender, String value) {
+    @Override protected Level parseValue(CommandSender sender, String value) {
         Level level = sender.getServer().getLevelByName(value);
         if (level == null) {
             throw new ArgumentParseException(
@@ -37,13 +36,11 @@ final public class LevelArgument extends Argument<Level> {
         return level;
     }
 
-    @Override
-    public String getTypeName() {
+    @Override public String getTypeName() {
         return "level";
     }
 
-    @Override
-    public CommandParameter toCommandParameter() {
+    @Override public CommandParameter toCommandParameter() {
         return CommandParameter.newEnum(this.getName(), this.isOptional(), this.commandEnum);
     }
 

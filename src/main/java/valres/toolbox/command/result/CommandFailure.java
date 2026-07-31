@@ -1,5 +1,6 @@
 package valres.toolbox.command.result;
 
+import org.jspecify.annotations.NonNull;
 import org.powernukkitx.command.CommandSender;
 import valres.toolbox.command.rules.Rule;
 
@@ -16,20 +17,20 @@ public record CommandFailure(
     Throwable cause
 ) implements CommandResult {
     public CommandFailure(
-        CommandSender sender,
-        CommandFailureReason reason,
-        String message,
+        @NonNull CommandSender sender,
+        @NonNull CommandFailureReason reason,
+        @NonNull String message,
         String usage,
-        Map<String, Object> details,
-        List<Rule> failedRules,
+        @NonNull Map<String, Object> details,
+        @NonNull List<Rule> failedRules,
         Throwable cause
     ) {
-        this.sender = Objects.requireNonNull(sender, "Command sender cannot be null");
-        this.reason = Objects.requireNonNull(reason, "Failure reason cannot be null");
-        this.message = Objects.requireNonNullElse(message, "Command failed");
+        this.sender = sender;
+        this.reason = reason;
+        this.message = message;
         this.usage = usage;
-        this.details = Map.copyOf(Objects.requireNonNull(details, "Failure details cannot be null"));
-        this.failedRules = List.copyOf(Objects.requireNonNull(failedRules, "Failed rules cannot be null"));
+        this.details = Map.copyOf(details);
+        this.failedRules = List.copyOf(failedRules);
         this.cause = cause;
     }
 
@@ -37,8 +38,7 @@ public record CommandFailure(
         this(sender, reason, message, usage, Map.of(), List.of(), null);
     }
 
-    @Override
-    public boolean isSuccess() {
+    @Override public boolean isSuccess() {
         return false;
     }
 }

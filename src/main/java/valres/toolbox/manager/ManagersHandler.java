@@ -1,5 +1,6 @@
 package valres.toolbox.manager;
 
+import org.jspecify.annotations.NonNull;
 import org.powernukkitx.plugin.PluginBase;
 import org.powernukkitx.utils.Logger;
 import valres.toolbox.manager.enums.ManagerPriority;
@@ -22,16 +23,19 @@ final public class ManagersHandler {
     final private Map<String, Manager> managers = new LinkedHashMap<>();
     final private List<Manager> orderedManagers = new ArrayList<>();
 
-    public ManagersHandler(PluginBase plugin) {
-        this.plugin = Objects.requireNonNull(plugin, "Plugin cannot be null");
+    public ManagersHandler(@NonNull PluginBase plugin) {
+        this.plugin = Objects.requireNonNull(
+            plugin,
+            "Plugin cannot be null"
+        );
         this.logger = plugin.getLogger();
     }
 
-    public PluginBase getPlugin() {
+    public @NonNull PluginBase getPlugin() {
         return this.plugin;
     }
 
-    public synchronized void registerManager(Manager... managers) {
+    public synchronized void registerManager(@NonNull Manager... managers) {
         Objects.requireNonNull(managers, "Managers cannot be null");
 
         for (Manager manager : managers) {

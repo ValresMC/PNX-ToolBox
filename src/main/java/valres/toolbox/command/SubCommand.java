@@ -1,5 +1,6 @@
 package valres.toolbox.command;
 
+import org.jspecify.annotations.NonNull;
 import valres.toolbox.command.annotation.SubCommandDefinition;
 import valres.toolbox.command.argument.Argument;
 import valres.toolbox.command.exception.CommandConfigurationException;
@@ -158,8 +159,7 @@ abstract public class SubCommand {
         }
     }
 
-    final void bindTo(Command command, List<String> path) {
-        Objects.requireNonNull(command, "Root command cannot be null");
+    final void bindTo(@NonNull Command command, List<String> path) {
         this.initialize();
 
         if (this.command != null && this.command != command) {

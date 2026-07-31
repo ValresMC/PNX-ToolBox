@@ -1,5 +1,6 @@
 package valres.toolbox.command.argument;
 
+import org.jspecify.annotations.NonNull;
 import org.powernukkitx.command.CommandSender;
 import org.powernukkitx.command.data.CommandEnum;
 import org.powernukkitx.command.data.CommandParameter;
@@ -14,7 +15,7 @@ import java.util.Map;
 import java.util.Objects;
 
 public class OptionsArgument<T> extends Argument<T> {
-    final private Map<String, T> values;
+    final private Map<@NonNull String, @NonNull T> values;
     final private List<String> names;
     final private CommandEnum commandEnum;
 
@@ -30,13 +31,21 @@ public class OptionsArgument<T> extends Argument<T> {
         this(name, values, true, true, defaultValue);
     }
 
-    protected OptionsArgument(String name, Map<String, T> values, boolean optional, boolean hasDefault, T defaultValue) {
+    protected OptionsArgument(
+        String name,
+        @NonNull Map<@NonNull String, @NonNull T> values,
+        boolean optional,
+        boolean hasDefault,
+        T defaultValue
+    ) {
         super(name, optional, hasDefault, defaultValue);
 
-        Objects.requireNonNull(values, "Option values cannot be null");
-        LinkedHashMap<String, T> normalized = new LinkedHashMap<>();
-        for (Map.Entry<String, T> entry : values.entrySet()) {
-            String option = Objects.requireNonNull(entry.getKey(), "Option name cannot be null").trim();
+        LinkedHashMap<@NonNull String, @NonNull T> normalized = new LinkedHashMap<>();
+        for (Map.Entry<@NonNull String, @NonNull T> entry : values.entrySet()) {
+            String option = Objects.requireNonNull(
+                entry.getKey(),
+                "Option name cannot be null"
+            ).trim();
             if (option.isEmpty() || option.chars().anyMatch(Character::isWhitespace)) {
                 throw new CommandConfigurationException(
                     "Option names for argument '" + name + "' cannot be empty or contain spaces"
@@ -49,7 +58,10 @@ public class OptionsArgument<T> extends Argument<T> {
                     "Duplicate option '" + option + "' for argument '" + name + "'"
                 );
             }
-            normalized.put(key, Objects.requireNonNull(entry.getValue(), "Option value cannot be null"));
+            normalized.put(key, Objects.requireNonNull(
+                entry.getValue(),
+                "Option value cannot be null"
+            ));
         }
         if (normalized.isEmpty()) {
             throw new CommandConfigurationException(
@@ -67,8 +79,7 @@ public class OptionsArgument<T> extends Argument<T> {
         this.commandEnum = new CommandEnum(name + "Options", this.names);
     }
 
-    @Override
-    protected T parseValue(CommandSender sender, String value) {
+    @Override protected T parseValue(CommandSender sender, String value) {
         String key = value.toLowerCase(Locale.ROOT);
         if (!this.values.containsKey(key)) {
             throw new ArgumentParseException(
@@ -87,13 +98,11 @@ public class OptionsArgument<T> extends Argument<T> {
         return this.values.get(key);
     }
 
-    @Override
-    public String getTypeName() {
+    @Override public String getTypeName() {
         return "option";
     }
 
-    @Override
-    public CommandParameter toCommandParameter() {
+    @Override public CommandParameter toCommandParameter() {
         return CommandParameter.newEnum(this.getName(), this.isOptional(), this.commandEnum);
     }
 

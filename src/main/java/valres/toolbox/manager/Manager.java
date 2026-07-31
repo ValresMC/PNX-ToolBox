@@ -1,5 +1,6 @@
 package valres.toolbox.manager;
 
+import org.jspecify.annotations.NonNull;
 import org.powernukkitx.plugin.PluginBase;
 import org.powernukkitx.utils.Logger;
 import valres.toolbox.manager.annotation.ManagerDependencies;
@@ -18,16 +19,19 @@ abstract public class Manager {
 
     private ManagerState state = ManagerState.UNLOADED;
 
-    protected Manager(PluginBase plugin) {
-        this.plugin = Objects.requireNonNull(plugin, "Plugin cannot be null");
+    protected Manager(@NonNull PluginBase plugin) {
+        this.plugin = Objects.requireNonNull(
+            plugin,
+            "Plugin cannot be null"
+        );
         this.logger = plugin.getLogger();
     }
 
-    public PluginBase getPlugin() {
+    public @NonNull PluginBase getPlugin() {
         return this.plugin;
     }
 
-    public Logger getLogger() {
+    public @NonNull Logger getLogger() {
         return this.logger;
     }
 
@@ -67,8 +71,11 @@ abstract public class Manager {
         return this.state;
     }
 
-    final void setState(ManagerState state) {
-        this.state = Objects.requireNonNull(state, "State cannot be null");
+    final void setState(@NonNull ManagerState state) {
+        this.state = Objects.requireNonNull(
+            state,
+            "State cannot be null"
+        );
     }
 
     public boolean isReady() {

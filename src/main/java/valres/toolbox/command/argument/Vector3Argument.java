@@ -14,23 +14,19 @@ final public class Vector3Argument extends Argument<Vector3> {
         super(name, optional);
     }
 
-    @Override
-    public int getMinimumTokens() {
+    @Override public int getMinimumTokens() {
         return 3;
     }
 
-    @Override
-    protected Vector3 parseValue(CommandSender sender, String value) {
+    @Override protected Vector3 parseValue(CommandSender sender, String value) {
         return CoordinateParser.parse(sender, this.getName(), value);
     }
 
-    @Override
-    public String getTypeName() {
+    @Override public String getTypeName() {
         return "x y z";
     }
 
-    @Override
-    public CommandParameter toCommandParameter() {
+    @Override public CommandParameter toCommandParameter() {
         return CommandParameter.newType(this.getName(), this.isOptional(), CommandParamType.POSITION_FLOAT);
     }
 }

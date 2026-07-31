@@ -12,11 +12,18 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Objects;
 
-public record RconPacket(int requestId, int type, String payload) {
+public record RconPacket(
+    int requestId,
+    int type,
+    @NonNull String payload
+) {
     final public static int MINIMUM_BODY_SIZE = 10;
 
     public RconPacket {
-        payload = Objects.requireNonNull(payload, "RCON payload cannot be null");
+        payload = Objects.requireNonNull(
+            payload,
+            "RCON payload cannot be null"
+        );
 
         if (payload.indexOf('\0') >= 0) {
             throw new RconProtocolException(
@@ -25,11 +32,18 @@ public record RconPacket(int requestId, int type, String payload) {
         }
     }
 
-    public RconPacket(int requestId, int type, byte[] payload) {
-        this(requestId, type, decodeUtf8(Objects.requireNonNull(payload, "RCON payload cannot be null")));
+    public RconPacket(int requestId, int type, @NonNull byte[] payload) {
+        this(
+            requestId,
+            type,
+            decodeUtf8(Objects.requireNonNull(
+                payload,
+                "RCON payload cannot be null"
+            ))
+        );
     }
 
-    public byte[] encode() {
+    public @NonNull byte[] encode() {
         byte[] payloadBytes = this.payload.getBytes(StandardCharsets.UTF_8);
         int bodySize = payloadBytes.length + MINIMUM_BODY_SIZE;
         ByteBuffer buffer = ByteBuffer.allocate(bodySize + Integer.BYTES).order(ByteOrder.LITTLE_ENDIAN);
@@ -43,7 +57,7 @@ public record RconPacket(int requestId, int type, String payload) {
         return buffer.array();
     }
 
-    public static RconPacket decode(byte[] body) {
+    public static @NonNull RconPacket decode(@NonNull byte[] body) {
         Objects.requireNonNull(body, "RCON packet body cannot be null");
         if (body.length < MINIMUM_BODY_SIZE) {
             throw new RconProtocolException(
@@ -63,7 +77,7 @@ public record RconPacket(int requestId, int type, String payload) {
         return new RconPacket(requestId, type, decodeUtf8(payload));
     }
 
-    private static String decodeUtf8(byte[] payload) {
+    private static @NonNull String decodeUtf8(@NonNull byte[] payload) {
         try {
             CharBuffer decoded = StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(payload));
             return decoded.toString();
@@ -74,7 +88,7 @@ public record RconPacket(int requestId, int type, String payload) {
         }
     }
 
-    public ByteBuffer toBuffer() {
+    public @NonNull ByteBuffer toBuffer() {
         return ByteBuffer.wrap(this.encode()).order(ByteOrder.LITTLE_ENDIAN);
     }
 
@@ -86,7 +100,7 @@ public record RconPacket(int requestId, int type, String payload) {
         return this.type;
     }
 
-    public String getPayload() {
+    public @NonNull String getPayload() {
         return this.payload;
     }
 
