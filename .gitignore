@@ -8,6 +8,8 @@ dependency-reduced-pom.xml
 pom.xml.versionsBackup
 release.properties
 
+/src/test/*
+
 # IDEs
 /.idea/
 *.iml
