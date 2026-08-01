@@ -15,6 +15,7 @@ import org.powernukkitx.command.CommandMap;
 import org.powernukkitx.command.CommandSender;
 import org.powernukkitx.command.PluginIdentifiableCommand;
 import org.powernukkitx.command.data.CommandDataVersions;
+import org.powernukkitx.command.data.CommandOverload;
 import org.powernukkitx.command.data.CommandParameter;
 import org.powernukkitx.permission.Permission;
 import org.powernukkitx.plugin.Plugin;
@@ -235,13 +236,16 @@ public abstract class Command extends org.powernukkitx.command.Command implement
 		}
 
 		Map<String, CommandParameter[]> globalParameters = this.commandParameters;
+		Map<String, CommandOverload> globalOverloads = this.commandData.overloads;
 		try {
 			LinkedHashMap<String, CommandParameter[]> visibleParameters = new LinkedHashMap<>();
 			this.addOverloads(visibleParameters, "root", List.of(), this.data, player);
 			this.commandParameters = visibleParameters;
+			this.commandData.overloads = new LinkedHashMap<>();
 			return super.generateCustomCommandData(player);
 		} finally {
 			this.commandParameters = globalParameters;
+			this.commandData.overloads = globalOverloads;
 		}
 	}
 
