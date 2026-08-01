@@ -7,7 +7,7 @@
 
     <groupId>valres.toolbox</groupId>
     <artifactId>pnx-toolbox</artifactId>
-    <version>1.0.15-SNAPSHOT</version>
+    <version>1.0.2-SNAPSHOT</version>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
