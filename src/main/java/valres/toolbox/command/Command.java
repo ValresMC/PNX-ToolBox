@@ -8,6 +8,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.powernukkitx.Player;
 import org.powernukkitx.Server;
 import org.powernukkitx.command.CommandMap;
@@ -227,10 +228,21 @@ public abstract class Command extends org.powernukkitx.command.Command implement
 		return result.isSuccess();
 	}
 
-	@Override public CommandDataVersions generateCustomCommandData(Player player) {
+	@Override public synchronized CommandDataVersions generateCustomCommandData(Player player) {
 		this.initialize();
+		if (!this.isVisibleTo(this.data, player)) {
+			return null;
+		}
 
-		return super.generateCustomCommandData(player);
+		Map<String, CommandParameter[]> globalParameters = this.commandParameters;
+		try {
+			LinkedHashMap<String, CommandParameter[]> visibleParameters = new LinkedHashMap<>();
+			this.addOverloads(visibleParameters, "root", List.of(), this.data, player);
+			this.commandParameters = visibleParameters;
+			return super.generateCustomCommandData(player);
+		} finally {
+			this.commandParameters = globalParameters;
+		}
 	}
 
 	protected void success(CommandSuccess result) {
@@ -319,17 +331,21 @@ public abstract class Command extends org.powernukkitx.command.Command implement
 
 	private void rebuildDefinition() {
 		LinkedHashMap<String, CommandParameter[]> overloads = new LinkedHashMap<>();
-		this.addOverloads(overloads, "root", List.of(), this.data);
+		this.addOverloads(overloads, "root", List.of(), this.data, null);
 		this.setCommandParameters(overloads);
 		this.setUsage(String.join("\n", this.getUsageLinesWithoutInitialization()));
 	}
 
-	private void addOverloads(Map<String, CommandParameter[]> overloads, String key, List<CommandParameter> prefix, CommandNodeData node) {
+	private void addOverloads(Map<String, CommandParameter[]> overloads, String key, List<CommandParameter> prefix, CommandNodeData node, @Nullable CommandSender viewer) {
 		List<CommandParameter> parameters = new ArrayList<>(prefix);
 		node.getArguments().stream().map(Argument::toCommandParameter).forEach(parameters::add);
 		overloads.put(key, parameters.toArray(CommandParameter[]::new));
 
 		for (SubCommand child : node.getSubCommands()) {
+			if (viewer != null && !this.isVisibleTo(child.getData(), viewer)) {
+				continue;
+			}
+
 			List<String> labels = new ArrayList<>();
 			labels.add(child.getName());
 			labels.addAll(child.getAliases());
@@ -343,9 +359,13 @@ public abstract class Command extends org.powernukkitx.command.Command implement
 				if (index > 0) {
 					childKey += "_alias_" + label;
 				}
-				this.addOverloads(overloads, childKey, childPrefix, child.getData());
+				this.addOverloads(overloads, childKey, childPrefix, child.getData(), viewer);
 			}
 		}
+	}
+
+	private boolean isVisibleTo(CommandNodeData node, CommandSender sender) {
+		return node.getRules().stream().allMatch(rule -> rule.canSee(sender));
 	}
 
 	private List<String> getUsageLinesWithoutInitialization() {
