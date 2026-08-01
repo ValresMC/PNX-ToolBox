@@ -42,7 +42,7 @@ release.properties
 /whitelist.json
 /banned-ips.json
 /banned-players.json
-/build/*
+/build/
 
 # Local configuration and secrets
 .env
