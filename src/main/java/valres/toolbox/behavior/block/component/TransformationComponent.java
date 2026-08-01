@@ -35,6 +35,23 @@ public final class TransformationComponent extends BlockComponent {
 	}
 
 	@Override public @NonNull Tag toNBT() {
-		return ComponentNbtHelper.compound("translation", this.translation, "rotation", this.rotation, "rotation_pivot", this.rotationPivot, "scale", this.scale, "scale_pivot", this.scalePivot);
+		return new org.powernukkitx.nbt.tag.CompoundTag()
+			.putInt("RX", quarterTurns(this.rotation, 0))
+			.putInt("RY", quarterTurns(this.rotation, 1))
+			.putInt("RZ", quarterTurns(this.rotation, 2))
+			.putFloat("SX", component(this.scale, 0, 1.0f))
+			.putFloat("SY", component(this.scale, 1, 1.0f))
+			.putFloat("SZ", component(this.scale, 2, 1.0f))
+			.putFloat("TX", component(this.translation, 0, 0.0f))
+			.putFloat("TY", component(this.translation, 1, 0.0f))
+			.putFloat("TZ", component(this.translation, 2, 0.0f));
+	}
+
+	private static int quarterTurns(@Nullable List<? extends Number> rotation, int axis) {
+		return ((int) Math.floor(component(rotation, axis, 0.0f)) % 360) / 90;
+	}
+
+	private static float component(@Nullable List<? extends Number> values, int index, float fallback) {
+		return values == null || values.size() <= index ? fallback : values.get(index).floatValue();
 	}
 }
