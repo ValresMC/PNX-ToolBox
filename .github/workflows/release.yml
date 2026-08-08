@@ -28,11 +28,8 @@ jobs:
           java-version: "21"
           cache: maven
 
-      - name: Spotless ?
-        run: mvn spotless:apply
-
       - name: Build and test with Maven
-        run: mvn --batch-mode --no-transfer-progress clean verify
+        run: mvn spotless:apply --batch-mode --no-transfer-progress clean verify
 
       - name: Prepare the release asset
         id: asset
