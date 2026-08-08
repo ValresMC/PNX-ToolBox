@@ -21,6 +21,8 @@ placement or hide an item.
 Custom blocks registered through `CustomBlockRegistry` receive generated
 Bedrock components from their PNX behavior. Crop permutations are automatic,
 and reusable permutation resolvers can be registered for other block families.
+Custom furnaces use PNX's real furnace inventory, recipes and events while the
+built-in furnace resolver generates their directional and lit-state visuals.
 
 Code-defined shaped and shapeless recipes can be assigned to custom crafting
 tables through `CustomCraftRegistry`, without JSON or YAML recipe files.

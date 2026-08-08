@@ -46,6 +46,26 @@ Entity-backed menus can have a custom size:
 InventoryMenu menu = InventoryMenu.create(MenuType.entity(18));
 ```
 
+### Live backing inventory
+
+Bind a menu to an existing inventory when the UI must present the same live
+storage instead of owning separate contents:
+
+```java
+InventoryMenu menu = InventoryMenu.create(MenuType.FURNACE)
+    .setName("Mithril Furnace")
+    .bindInventory(furnaceInventory);
+```
+
+Changes made through the menu are written to the backing inventory, and normal
+backing-inventory changes are sent to every menu viewer. Call
+`synchronizeFromBacking()` for native implementations that mutate their slots
+internally without firing an `InventoryListener`, as PNX does for furnace output.
+
+Furnace menus also keep the block actor identifier separate from the custom
+window title. This avoids the immediate client-side close caused by PNX's
+default furnace fake block when a non-vanilla title is used.
+
 ## Reusable menu classes
 
 `InventoryMenu` is intentionally extensible. A subclass can prepare its contents in the constructor and override the protected transaction and close hooks:

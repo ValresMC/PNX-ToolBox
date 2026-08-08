@@ -8,6 +8,7 @@ import org.jspecify.annotations.NonNull;
 import org.powernukkitx.Player;
 import org.powernukkitx.event.inventory.ItemStackRequestActionEvent;
 import org.powernukkitx.inventory.Inventory;
+import org.powernukkitx.inventory.InventoryListener;
 import org.powernukkitx.inventory.fake.FakeInventory;
 import org.powernukkitx.item.Item;
 import valres.toolbox.menu.transaction.MenuTransaction;
@@ -23,6 +24,9 @@ public class InventoryMenu {
 	private String name;
 	private MenuTransactionHandler transactionHandler;
 	private MenuCloseHandler closeHandler;
+	private Inventory backingInventory;
+	private final InventoryListener backingListener = this::copyBackingSlot;
+	private boolean synchronizing;
 
 	public static @NonNull InventoryMenu create(@NonNull MenuType type) {
 		return new InventoryMenu(type);
@@ -51,6 +55,7 @@ public class InventoryMenu {
 		this.inventory = this.type.createInventory(this.name);
 		this.inventory.setDefaultItemHandler(this::dispatchTransaction);
 		this.inventory.setOnCloseHandler(this::onClose);
+		this.inventory.addListener(this::copyMenuSlot);
 	}
 
 	public @NonNull MenuType getType() {
@@ -70,6 +75,54 @@ public class InventoryMenu {
 
 	public @NonNull Inventory getInventory() {
 		return this.inventory;
+	}
+
+	/**
+	 * Uses another inventory as live storage while retaining this menu's fake
+	 * Bedrock container.
+	 */
+	public @NonNull InventoryMenu bindInventory(@NonNull Inventory backingInventory) {
+		Objects.requireNonNull(backingInventory, "Backing inventory cannot be null");
+		if (backingInventory == this.inventory) {
+			throw new IllegalArgumentException("A menu cannot bind its own inventory");
+		}
+		if (backingInventory.getSize() != this.inventory.getSize()) {
+			throw new IllegalArgumentException("Backing inventory size must be " + this.inventory.getSize());
+		}
+		if (this.backingInventory == backingInventory) {
+			return this;
+		}
+		if (this.backingInventory != null) {
+			this.backingInventory.removeListener(this.backingListener);
+		}
+
+		this.backingInventory = backingInventory;
+		this.backingInventory.addListener(this.backingListener);
+		return this.synchronizeFromBacking();
+	}
+
+	public Inventory getBackingInventory() {
+		return this.backingInventory;
+	}
+
+	/** Refreshes slots changed internally without firing an inventory listener. */
+	public @NonNull InventoryMenu synchronizeFromBacking() {
+		if (this.backingInventory == null || this.synchronizing) {
+			return this;
+		}
+
+		this.synchronizing = true;
+		try {
+			for (int slot = 0; slot < this.inventory.getSize(); slot++) {
+				Item item = this.backingInventory.getItem(slot);
+				if (!sameItem(this.inventory.getUnclonedItem(slot), item)) {
+					this.inventory.setItem(slot, item);
+				}
+			}
+		} finally {
+			this.synchronizing = false;
+		}
+		return this;
 	}
 
 	public MenuTransactionHandler getTransactionHandler() {
@@ -168,5 +221,35 @@ public class InventoryMenu {
 		if (decision.isCancelled()) {
 			event.setCancelled(true);
 		}
+	}
+
+	private void copyMenuSlot(Inventory ignored, Item oldItem, int slot) {
+		if (this.backingInventory == null || this.synchronizing) {
+			return;
+		}
+
+		this.synchronizing = true;
+		try {
+			this.backingInventory.setItem(slot, this.inventory.getItem(slot), false);
+		} finally {
+			this.synchronizing = false;
+		}
+	}
+
+	private void copyBackingSlot(Inventory ignored, Item oldItem, int slot) {
+		if (this.synchronizing) {
+			return;
+		}
+
+		this.synchronizing = true;
+		try {
+			this.inventory.setItem(slot, this.backingInventory.getItem(slot));
+		} finally {
+			this.synchronizing = false;
+		}
+	}
+
+	private static boolean sameItem(@NonNull Item first, @NonNull Item second) {
+		return first.getCount() == second.getCount() && first.equals(second, true, true);
 	}
 }

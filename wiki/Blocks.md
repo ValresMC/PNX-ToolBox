@@ -366,6 +366,93 @@ The built-in resolver:
 - Adjusts selection height for each stage.
 - Uses `ruby_crop_0` through `ruby_crop_7` for a crop with eight stages.
 
+## Custom furnaces
+
+`BlockCustomFurnace` is a PNX-native furnace base. It keeps the real
+`FurnaceTypeInventory`, furnace recipes, fuel and smelt events, lock handling,
+hopper access and comparator output supplied by PowerNukkitX.
+
+Bedrock closes a furnace UI tied directly to a custom block because it does not
+recognize that block identifier as a vanilla furnace. The block entity therefore
+uses `InventoryMenu` with `MenuType.FURNACE` as its presentation layer and binds
+it to the real furnace inventory. Only the player receives the temporary vanilla
+furnace block required by the client; the world block and its server inventory
+are never replaced. Slot changes, progress bars, furnace experience and custom
+titles remain synchronized.
+
+Only one block class is required for each furnace type:
+
+```java
+public final class MithrilFurnace extends BlockCustomFurnace {
+    public static final String IDENTIFIER = "example:mithril_furnace";
+
+    public static final BlockProperties PROPERTIES =
+        createFurnaceProperties(IDENTIFIER);
+
+    public MithrilFurnace(BlockState blockState) {
+        super(blockState);
+    }
+
+    @Override
+    public BlockProperties getProperties() {
+        return PROPERTIES;
+    }
+
+    @Override
+    public String getName() {
+        return "Mithril Furnace";
+    }
+
+    @Override
+    public int getCookingSpeedMultiplier() {
+        return 10;
+    }
+}
+```
+
+Register it through the existing block registry during `onLoad()`:
+
+```java
+CustomBlockRegistry.getInstance().register(MithrilFurnace.class);
+```
+
+The registry installs the shared server-side furnace block entity before it
+registers the first furnace block. A custom tile class and a separate lit block
+identifier are not needed.
+
+The built-in `FurnacePermutationResolver` automatically:
+
+- Declares cardinal placement with the correct 180-degree offset.
+- Marks the custom block as interactable for the Bedrock client.
+- Generates the eight direction/lit permutations.
+- Rotates the full-block geometry for north, south, east and west.
+- Switches the front texture when the furnace starts or stops burning.
+- Emits the configured light level only while the `lit` state is true.
+- Emits native smoke and flame particles from the oriented front face.
+- Gives the inventory item a stable, unlit visual and state.
+
+The default texture prefix is the identifier path. The example therefore uses:
+
+- `mithril_furnace_side`
+- `mithril_furnace_top`
+- `mithril_furnace_front_off`
+- `mithril_furnace_front_on`
+
+Override `getTexturePrefix()`, an individual texture getter, or
+`getBottomTexture()` when the resource pack follows another convention.
+`getBurningLightLevel()` defaults to 13 and accepts 0 through 15.
+`getCookingSpeedMultiplier()` accepts 1 through 200.
+Override `displaysBurningParticles()` to disable the server-side particles.
+
+The speed multiplier shortens cooking time while retaining the complete fuel
+duration, matching an upgraded furnace rather than vanilla blast-furnace fuel
+consumption. PNX still owns the actual tick loop and fires its native
+`FurnaceBurnEvent` and `FurnaceSmeltEvent`.
+
+`createFurnaceProperties()` must be used, or the class must explicitly declare
+both `minecraft:cardinal_direction` and `lit`. Registration fails early if the
+states, speed, light level, or texture keys are invalid.
+
 ## Traits: before and after
 
 A Bedrock trait derives states automatically during placement or when

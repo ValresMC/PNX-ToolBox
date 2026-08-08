@@ -8,6 +8,7 @@ import java.util.ServiceLoader;
 import org.jspecify.annotations.NonNull;
 import valres.toolbox.behavior.block.builder.BlockBuilder;
 import valres.toolbox.behavior.block.permutation.resolver.CropsPermutationResolver;
+import valres.toolbox.behavior.block.permutation.resolver.FurnacePermutationResolver;
 
 /**
  * Extensible resolver that generates client permutations from a block's PNX
@@ -19,6 +20,7 @@ public abstract class PermutationsResolver {
 	static {
 		resolvers = new ArrayList<>();
 		register(new CropsPermutationResolver());
+		register(new FurnacePermutationResolver());
 
 		ServiceLoader.load(PermutationsResolver.class).forEach(PermutationsResolver::register);
 	}

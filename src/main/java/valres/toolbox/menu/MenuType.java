@@ -54,6 +54,9 @@ public final class MenuType {
 	}
 
 	@NonNull FakeInventory createInventory(@NonNull String name) {
+		if (this.nativeType == FakeInventoryType.FURNACE) {
+			return new FurnaceFakeInventory(name);
+		}
 		return new FakeInventory(this.nativeType, name, this.size);
 	}
 
