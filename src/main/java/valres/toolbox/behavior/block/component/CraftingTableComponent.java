@@ -52,11 +52,7 @@ public final class CraftingTableComponent extends BlockComponent {
 	}
 
 	@Override public @NonNull Tag toNBT() {
-		return ComponentNbtHelper.compound(
-				"table_name", this.tableName,
-				"grid_size", 3,
-				"crafting_tags", this.craftingTags
-		);
+		return ComponentNbtHelper.compound("table_name", this.tableName, "grid_size", 3, "crafting_tags", this.craftingTags);
 	}
 
 	private static String validateCraftingTag(String craftingTag) {

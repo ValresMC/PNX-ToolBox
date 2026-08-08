@@ -28,6 +28,9 @@ jobs:
           java-version: "21"
           cache: maven
 
+      - name: Spotless ?
+        run: mvn spotless:apply
+
       - name: Build and test with Maven
         run: mvn --batch-mode --no-transfer-progress clean verify
 

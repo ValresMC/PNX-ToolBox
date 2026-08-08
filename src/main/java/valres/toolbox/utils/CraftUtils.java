@@ -227,8 +227,7 @@ public final class CraftUtils {
 		return registeredRecipes;
 	}
 
-	private static void rebuildRegistry(RecipeRegistry recipes, List<Recipe> registeredRecipes,
-			Map<Recipe, Double> experience) {
+	private static void rebuildRegistry(RecipeRegistry recipes, List<Recipe> registeredRecipes, Map<Recipe, Double> experience) {
 		recipes.cleanAllRecipes();
 
 		for (Recipe recipe : registeredRecipes) {
@@ -250,8 +249,7 @@ public final class CraftUtils {
 	}
 
 	private static void syncRecipes(RecipeRegistry recipes) {
-		Server.getInstance().getOnlinePlayers().values()
-				.forEach(player -> player.sendPacketImmediately(recipes.getCraftingPacket()));
+		Server.getInstance().getOnlinePlayers().values().forEach(player -> player.sendPacketImmediately(recipes.getCraftingPacket()));
 	}
 
 	private static Item getItemOrThrow(String identifier) {
@@ -273,8 +271,7 @@ public final class CraftUtils {
 	}
 
 	private static @NonNull String normalizeIdentifier(@NonNull String identifier) {
-		String normalizedIdentifier = Objects.requireNonNull(identifier, "Identifier cannot be null").trim()
-				.toLowerCase(Locale.ROOT);
+		String normalizedIdentifier = Objects.requireNonNull(identifier, "Identifier cannot be null").trim().toLowerCase(Locale.ROOT);
 		if (normalizedIdentifier.isEmpty()) {
 			throw new IllegalArgumentException("Identifier cannot be empty");
 		}
