@@ -17,6 +17,8 @@ import org.powernukkitx.item.Item;
 import org.powernukkitx.level.Level;
 import org.powernukkitx.registry.RegisterException;
 import valres.toolbox.behavior.block.builder.BlockBuilder;
+import valres.toolbox.behavior.block.furnace.BlockCustomFurnace;
+import valres.toolbox.behavior.block.furnace.BlockEntityCustomFurnace;
 import valres.toolbox.behavior.item.CustomItemRegistry;
 
 public final class CustomBlockRegistry {
@@ -61,10 +63,12 @@ public final class CustomBlockRegistry {
 		if (this.blocks.containsKey(identifier)) {
 			throw new IllegalStateException("Block '" + identifier + "' is already registered");
 		}
-
 		BlockDataResolver.applyDefault(builder);
 		CustomBlockDefinition definition = builder.toDefinition();
 		boolean hasLinkedItem = blockItemClass != null;
+		if (block instanceof BlockCustomFurnace) {
+			BlockEntityCustomFurnace.ensureRegistered();
+		}
 
 		if (hasLinkedItem) {
 			CustomItemRegistry.getInstance().registerBlockItem(blockItemClass, identifier);

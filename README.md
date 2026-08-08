@@ -2,6 +2,11 @@
 
 Toolbox for PowerNukkitX plugins: manager lifecycle, RCON and a typed command framework.
 
+Interactive inventory menus are available through a Java-native `InventoryMenu` facade built
+on PowerNukkitX's fake inventory and item-stack request APIs. Menus support shared live
+contents, explicit transaction decisions, close callbacks and reusable subclasses without
+requiring packet listeners or manual registration.
+
 The command framework supports nested sub-commands, typed arguments, reusable rules,
 automatic permissions, Bedrock overloads/autocompletion and live command refresh.
 Rule and argument errors are configurable through `command-messages-config.yml` and
@@ -16,6 +21,8 @@ placement or hide an item.
 Custom blocks registered through `CustomBlockRegistry` receive generated
 Bedrock components from their PNX behavior. Crop permutations are automatic,
 and reusable permutation resolvers can be registered for other block families.
+Custom furnaces use PNX's real furnace inventory, recipes and events while the
+built-in furnace resolver generates their directional and lit-state visuals.
 
 Code-defined shaped and shapeless recipes can be assigned to custom crafting
 tables through `CustomCraftRegistry`, without JSON or YAML recipe files.
