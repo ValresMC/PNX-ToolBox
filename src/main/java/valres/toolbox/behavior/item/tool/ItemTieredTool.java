@@ -5,15 +5,15 @@ import org.jspecify.annotations.NonNull;
 import org.powernukkitx.block.Block;
 import org.powernukkitx.item.ItemTool;
 
-public abstract class TieredItemTool extends ItemTool implements ToolTierProvider {
+public abstract class ItemTieredTool extends ItemTool {
 	private final ToolTier toolTier;
 
-	protected TieredItemTool(@NonNull String identifier, @NonNull ToolTier toolTier) {
+	protected ItemTieredTool(@NonNull String identifier, @NonNull ToolTier toolTier) {
 		super(identifier);
 		this.toolTier = Objects.requireNonNull(toolTier, "toolTier");
 	}
 
-	@Override public final @NonNull ToolTier getToolTier() {
+	public final @NonNull ToolTier getToolTier() {
 		return this.toolTier;
 	}
 

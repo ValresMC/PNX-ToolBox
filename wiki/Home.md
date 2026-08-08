@@ -43,6 +43,8 @@ PNX-ToolBox targets Java 21 and the PowerNukkitX 3.0.0 plugin API.
 
 - [[Blocks]] — register custom blocks and generate or extend permutations.
 
+- [[Crafting]] — define custom crafting tables and register recipes from Java.
+
 ## Design philosophy
 
 The library follows three principles:

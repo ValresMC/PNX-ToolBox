@@ -17,4 +17,7 @@ Custom blocks registered through `CustomBlockRegistry` receive generated
 Bedrock components from their PNX behavior. Crop permutations are automatic,
 and reusable permutation resolvers can be registered for other block families.
 
+Code-defined shaped and shapeless recipes can be assigned to custom crafting
+tables through `CustomCraftRegistry`, without JSON or YAML recipe files.
+
 See [the wiki](wiki/Home.md) for guides and complete examples.

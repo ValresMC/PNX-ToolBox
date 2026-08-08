@@ -5,13 +5,13 @@ import org.jspecify.annotations.NonNull;
 import org.powernukkitx.item.ItemTool;
 
 public record ToolTier(int level, int miningSpeed, int baseAttackDamage, int durability, int enchantability) {
-	public static final ToolTier WOODEN = new ToolTier(ItemTool.TIER_WOODEN, 2, 4, ItemTool.DURABILITY_WOODEN, 15);
-	public static final ToolTier GOLD = new ToolTier(ItemTool.TIER_GOLD, 12, 4, ItemTool.DURABILITY_GOLD, 22);
-	public static final ToolTier STONE = new ToolTier(ItemTool.TIER_STONE, 4, 5, ItemTool.DURABILITY_STONE, 5);
-	public static final ToolTier COPPER = new ToolTier(ItemTool.TIER_COPPER, 5, 5, ItemTool.DURABILITY_COPPER, 0);
-	public static final ToolTier IRON = new ToolTier(ItemTool.TIER_IRON, 6, 6, ItemTool.DURABILITY_IRON, 14);
-	public static final ToolTier DIAMOND = new ToolTier(ItemTool.TIER_DIAMOND, 8, 7, ItemTool.DURABILITY_DIAMOND, 10);
-	public static final ToolTier NETHERITE = new ToolTier(ItemTool.TIER_NETHERITE, 9, 8, ItemTool.DURABILITY_NETHERITE, 15);
+	public static final ToolTier TOOL_TIER_WOODEN = new ToolTier(ItemTool.TIER_WOODEN, 2, 4, ItemTool.DURABILITY_WOODEN, 15);
+	public static final ToolTier TOOL_TIER_GOLD = new ToolTier(ItemTool.TIER_GOLD, 12, 4, ItemTool.DURABILITY_GOLD, 22);
+	public static final ToolTier TOOL_TIER_STONE = new ToolTier(ItemTool.TIER_STONE, 4, 5, ItemTool.DURABILITY_STONE, 5);
+	public static final ToolTier TOOL_TIER_COPPER = new ToolTier(ItemTool.TIER_COPPER, 5, 5, ItemTool.DURABILITY_COPPER, 0);
+	public static final ToolTier TOOL_TIER_IRON = new ToolTier(ItemTool.TIER_IRON, 6, 6, ItemTool.DURABILITY_IRON, 14);
+	public static final ToolTier TOOL_TIER_DIAMOND = new ToolTier(ItemTool.TIER_DIAMOND, 8, 7, ItemTool.DURABILITY_DIAMOND, 10);
+	public static final ToolTier TOOL_TIER_NETHERITE = new ToolTier(ItemTool.TIER_NETHERITE, 9, 8, ItemTool.DURABILITY_NETHERITE, 15);
 
 	public ToolTier {
 		if (level < 0) {

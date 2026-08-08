@@ -6,11 +6,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import me.sunlan.fastreflection.FastConstructor;
 import me.sunlan.fastreflection.FastMemberLoader;
 import org.powernukkitx.item.Item;
+import org.powernukkitx.item.customitem.CustomItemDefinition;
 import org.powernukkitx.registry.ItemRegistry;
 import org.powernukkitx.registry.RegisterException;
 
 public final class PNXItemRegistryAccessor {
 	private static final Field constructorsField;
+	private static final Field customDefinitionsField;
 
 	private static final Map<ClassLoader, FastMemberLoader> loaders = new ConcurrentHashMap<>();
 
@@ -18,8 +20,23 @@ public final class PNXItemRegistryAccessor {
 		try {
 			constructorsField = ItemRegistry.class.getDeclaredField("CACHE_CONSTRUCTORS");
 			constructorsField.setAccessible(true);
+			customDefinitionsField = ItemRegistry.class.getDeclaredField("CUSTOM_ITEM_DEFINITIONS");
+			customDefinitionsField.setAccessible(true);
 		} catch (ReflectiveOperationException exception) {
 			throw new ExceptionInInitializerError(exception);
+		}
+	}
+
+	@SuppressWarnings("unchecked") public static void registerCustomDefinition(CustomItemDefinition definition) throws RegisterException {
+		try {
+			Map<String, CustomItemDefinition> definitions = (Map<String, CustomItemDefinition>) customDefinitionsField.get(null);
+			if (definitions.putIfAbsent(definition.identifier(), definition) != null) {
+				throw new RegisterException("Custom item definition '" + definition.identifier() + "' is already registered");
+			}
+		} catch (RegisterException exception) {
+			throw exception;
+		} catch (ReflectiveOperationException exception) {
+			throw new RegisterException(exception);
 		}
 	}
 

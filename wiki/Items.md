@@ -328,6 +328,34 @@ Damage starts from `baseAttackDamage`:
 Add a custom `DiggerComponent` only when the automatic tags do not match the
 blocks that the tool should mine.
 
+## Armor: one `ArmorInfo`
+
+Extend `ConfiguredItemArmor` to keep the equipment slot, protection,
+toughness, durability, and fire resistance synchronized with the generated
+Bedrock components:
+
+```java
+@DataDrivenItem
+public final class RubyHelmet extends ConfiguredItemArmor {
+    private static final ArmorInfo RUBY_HELMET = new ArmorInfo(
+        4,                     // Defense points
+        3,                     // Toughness
+        650,                   // Durability
+        ArmorInfo.SLOT_HEAD,   // Equipment slot
+        true                   // Fireproof
+    );
+
+    public RubyHelmet() {
+        super("example:ruby_helmet", RUBY_HELMET);
+    }
+}
+```
+
+`ArmorInfo` also provides profiles for every vanilla leather, chainmail,
+golden, copper, iron, diamond, and netherite armor piece, plus the turtle
+helmet. For example, use `ArmorInfo.DIAMOND_CHESTPLATE` when a custom item
+should reuse diamond chestplate statistics.
+
 ## Creative inventory
 
 Automatic detection covers:
