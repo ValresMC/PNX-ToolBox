@@ -33,7 +33,7 @@ public final class SelectionBoxComponent extends BlockComponent {
 
 	@Override public @NonNull Tag toNBT() {
 		if (!this.enabled) {
-			return ComponentNbtHelper.compound("enabled", false);
+			return ComponentNbtHelper.tag(false);
 		}
 
 		return ComponentNbtHelper.compound("enabled", true, "origin", this.box.origin(), "size", this.box.size());

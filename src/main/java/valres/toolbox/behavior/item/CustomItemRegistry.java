@@ -7,6 +7,8 @@ import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ItemVersion;
 import org.powernukkitx.block.Block;
 import org.powernukkitx.item.Item;
+import org.powernukkitx.item.customitem.CustomItemDefinition;
+import org.powernukkitx.nbt.tag.CompoundTag;
 import org.powernukkitx.registry.ItemRuntimeIdRegistry;
 import org.powernukkitx.registry.RegisterException;
 import org.powernukkitx.registry.Registries;
@@ -99,7 +101,7 @@ public final class CustomItemRegistry {
 			throw new IllegalStateException("Item must be a Data-Driven item");
 		}
 
-		int runtimeId = this.allocateRuntimeId();
+		int runtimeId = CustomItemDefinition.ensureRuntimeIdAllocated(identifier);
 		DataDrivenItemBuilder builder = DataDrivenItemBuilder.create(item).setRuntimeId(runtimeId);
 
 		this.applyItemComponents(builder);
@@ -150,10 +152,14 @@ public final class CustomItemRegistry {
 			throw new IllegalStateException("Runtime ID '" + runtimeId + "' is already registered by '" + registeredIdentifier + "'");
 		}
 
-		NbtMap componentData = builder.toNBT().toNetwork();
+		CompoundTag definitionNbt = builder.toNBT();
+		NbtMap componentData = definitionNbt.toNetwork();
 
 		try {
 			PNXItemRegistryAccessor.register(identifier, item.getClass().asSubclass(Item.class));
+			if (builder.getFormat() == ItemVersion.DATA_DRIVEN) {
+				PNXItemRegistryAccessor.registerCustomDefinition(new CustomItemDefinition(identifier, definitionNbt));
+			}
 
 			Registries.ITEM_RUNTIMEID.registerCustomRuntimeItem(new ItemRuntimeIdRegistry.RuntimeEntry(identifier, runtimeId, builder.getFormat() == ItemVersion.DATA_DRIVEN));
 		} catch (RegisterException exception) {

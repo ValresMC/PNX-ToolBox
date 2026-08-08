@@ -39,7 +39,7 @@ import valres.toolbox.behavior.item.properties.ShouldDespawnProperty;
 import valres.toolbox.behavior.item.properties.StackedByDataProperty;
 import valres.toolbox.behavior.item.properties.UseAnimationProperty;
 import valres.toolbox.behavior.item.properties.UseDurationProperty;
-import valres.toolbox.behavior.item.tool.ToolTierProvider;
+import valres.toolbox.behavior.item.tool.ItemTieredTool;
 
 public final class ItemDataResolver {
 	private ItemDataResolver() {
@@ -228,8 +228,8 @@ public final class ItemDataResolver {
 			return null;
 		}
 
-		if (item instanceof ToolTierProvider provider) {
-			return provider.getToolTier().miningSpeed();
+		if (item instanceof ItemTieredTool tieredTool) {
+			return tieredTool.getToolTier().miningSpeed();
 		}
 
 		return switch (item.getTier()) {
