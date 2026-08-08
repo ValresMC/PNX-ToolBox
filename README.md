@@ -2,6 +2,11 @@
 
 Toolbox for PowerNukkitX plugins: manager lifecycle, RCON and a typed command framework.
 
+Interactive inventory menus are available through a Java-native `InventoryMenu` facade built
+on PowerNukkitX's fake inventory and item-stack request APIs. Menus support shared live
+contents, explicit transaction decisions, close callbacks and reusable subclasses without
+requiring packet listeners or manual registration.
+
 The command framework supports nested sub-commands, typed arguments, reusable rules,
 automatic permissions, Bedrock overloads/autocompletion and live command refresh.
 Rule and argument errors are configurable through `command-messages-config.yml` and
